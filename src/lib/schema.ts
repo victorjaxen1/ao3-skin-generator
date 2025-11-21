@@ -8,6 +8,9 @@ export interface Message {
   outgoing: boolean; // true = author perspective sender bubble
   attachments?: Attachment[];
   roleColor?: string; // Discord role/name color
+  // Chat-specific enhancements
+  status?: 'sending' | 'sent' | 'delivered' | 'read'; // message delivery status
+  reaction?: string; // emoji reaction to this message
 }
 export interface SkinSettings {
   bubbleOpacity: number; // 0..1
@@ -35,23 +38,43 @@ export interface SkinSettings {
   twitterQuoteText?: string;
   twitterQuoteImage?: string;
   // Google specific settings
-  googleQuery?: string;
-  googleSuggestions?: string[]; // list of suggestion lines
+  googleQuery?: string; // the main search query
+  googleSuggestions?: string[]; // autocomplete dropdown suggestions
+  googleShowStats?: boolean; // toggle to show result statistics
   googleResultsCount?: string; // e.g. "About 24,040,000,000 results"
   googleResultsTime?: string; // e.g. "0.56 seconds"
+  googleShowDidYouMean?: boolean; // toggle for correction
   googleDidYouMean?: string; // correction term (Captain Jack Sparrow)
   googleEngineVariant?: 'google' | 'google-old' | 'naver';
+  // Note specific settings
+  noteStyle?: 'system' | 'document' | 'letter' | 'simple'; // different note types
+  noteAlignment?: 'center' | 'left' | 'right';
   // Instagram specific
-  instagramUsernameOverride?: string;
+  instagramUsername?: string; // direct username field (not override)
+  instagramAvatarUrl?: string; // dedicated avatar for post
+  instagramImageUrl?: string; // main post image
+  instagramCaption?: string; // post caption text
+  instagramLocation?: string; // location tag (e.g., "Paris, France")
+  instagramShowLikes?: boolean; // toggle to show likes
   instagramLikes?: number;
+  instagramShowComments?: boolean; // toggle to show comment count
   instagramCommentsCount?: number;
-  instagramShowCommentsLink?: boolean;
-  instagramTimestamp?: string;
-  instagramImageUrl?: string; // override if not using message attachment
+  instagramTimestamp?: string; // natural language: "2 hours ago", "May 5"
   // Discord specific
   discordChannelName?: string;
+  discordServerName?: string; // new: server context
   discordShowHeader?: boolean;
   discordDarkMode?: boolean;
+  discordRolePresets?: Array<{name: string; color: string}>; // new: save common roles
+  // iOS/Android chat enhancements
+  chatContactName?: string; // "Conversation with..." header
+  chatShowTyping?: boolean; // show typing indicator
+  chatTypingName?: string; // who is typing
+  iosShowDelivered?: boolean; // iOS "Delivered" indicator
+  iosShowHeader?: boolean; // "To: Contact" header
+  androidShowStatus?: boolean; // "Online" / "Last seen"
+  androidStatusText?: string; // custom status text
+  androidCheckmarks?: boolean; // show ✓✓ checkmarks
 }
 export interface SkinProject {
   id: string;
@@ -88,19 +111,41 @@ export const defaultProject = (): SkinProject => ({
     twitterQuoteImage: '',
     googleQuery: '',
     googleSuggestions: [],
+    googleShowStats: false,
     googleResultsCount: '',
     googleResultsTime: '',
+    googleShowDidYouMean: false,
     googleDidYouMean: '',
     googleEngineVariant: 'google',
-    instagramUsernameOverride: '',
-    instagramLikes: 0,
-    instagramCommentsCount: 0,
-    instagramShowCommentsLink: true,
-    instagramTimestamp: '',
+    noteStyle: 'system',
+    noteAlignment: 'center',
+    instagramUsername: '',
+    instagramAvatarUrl: '',
     instagramImageUrl: '',
+    instagramCaption: '',
+    instagramLocation: '',
+    instagramShowLikes: false,
+    instagramLikes: 0,
+    instagramShowComments: false,
+    instagramCommentsCount: 0,
+    instagramTimestamp: '',
     discordChannelName: 'general',
+    discordServerName: '',
     discordShowHeader: true,
     discordDarkMode: true,
+    discordRolePresets: [
+      { name: 'Admin', color: '#ED4245' },
+      { name: 'Moderator', color: '#5865F2' },
+      { name: 'Member', color: '#B9BBBE' }
+    ],
+    chatContactName: '',
+    chatShowTyping: false,
+    chatTypingName: '',
+    iosShowDelivered: false,
+    iosShowHeader: false,
+    androidShowStatus: false,
+    androidStatusText: 'Online',
+    androidCheckmarks: true,
   },
   messages: [
     {

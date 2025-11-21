@@ -18,7 +18,26 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   const sanitized = sanitizeText(msg.content);
   const avatar = msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.sender} avatar" class="avatar" />` : '';
   const who = `<dt class="sender">${msg.sender}</dt>`;
-  const bubble = `<dd class="bubble ${msg.outgoing ? 'out' : 'in'}">${sanitized}${msg.timestamp ? `<span class="time">${msg.timestamp}</span>`: ''}</dd>`;
+  
+  // Enhanced bubble with status and reactions for chat templates
+  let bubble = `<dd class="bubble ${msg.outgoing ? 'out' : 'in'}">${sanitized}${msg.timestamp ? `<span class="time">${msg.timestamp}</span>`: ''}`;
+  
+  // Add reaction if present (iOS/Android)
+  if ((template === 'ios' || template === 'android') && msg.reaction) {
+    bubble += `<span class="reaction">${msg.reaction}</span>`;
+  }
+  
+  bubble += `</dd>`;
+  
+  // Add status indicators
+  let statusIndicator = '';
+  if (template === 'ios' && msg.outgoing && project.settings.iosShowDelivered && msg.status === 'delivered') {
+    statusIndicator = `<dd class="status-indicator">Delivered</dd>`;
+  } else if (template === 'android' && msg.outgoing && project.settings.androidCheckmarks) {
+    const checks = msg.status === 'read' ? '✓✓' : msg.status === 'delivered' ? '✓✓' : msg.status === 'sent' ? '✓' : '';
+    if (checks) statusIndicator = `<dd class="checkmarks">${checks}</dd>`;
+  }
+  
   const atts = (msg.attachments||[]).map(a => `<dd class="attach"><span class="visually-hidden">Image:</span><img src="${a.url}" alt="${a.alt||''}" class="attach-img"/></dd>`).join('');
   
   if (template === 'note') {
@@ -53,30 +72,64 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   }
   
   // iOS/Android: show avatar and normal layout
-  return `<div class="row">${avatar}<dl class="msg">${who}${bubble}${atts}</dl></div>`;
+  return `<div class="row">${avatar}<dl class="msg">${who}${bubble}${statusIndicator}${atts}</dl></div>`;
 }
 
 export function buildHTML(project: SkinProject): string {
+  // iOS and Android templates with enhanced features
+  if (project.template === 'ios' || project.template === 'android') {
+    const s = project.settings;
+    const isIOS = project.template === 'ios';
+    
+    // Contact header
+    const contactHeader = s.chatContactName 
+      ? `<div class="chat-header">${isIOS && s.iosShowHeader ? `<span class="to-label">To: </span>` : ''}<span class="contact-name">${sanitizeText(s.chatContactName)}</span>${!isIOS && s.androidShowStatus ? `<span class="status">${sanitizeText(s.androidStatusText||'Online')}</span>` : ''}</div>`
+      : '';
+    
+    // Messages
+    const body = project.messages.map(m => msgHTML(m, project.template, project)).join('');
+    
+    // Typing indicator
+    const typing = s.chatShowTyping 
+      ? `<div class="row typing"><div class="typing-bubble"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>${s.chatTypingName ? `<span class="typing-label">${sanitizeText(s.chatTypingName)}</span>` : ''}</div>`
+      : '';
+    
+    const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
+    return `<div class="chat">${contactHeader}${body}${typing}${watermark}</div>`;
+  }
+  
   if (project.template === 'google') {
-    // Google / variant search layout
-    const engine = project.settings.googleEngineVariant || 'google';
+    // Google search layout with dedicated query field
+    const s = project.settings;
+    const engine = s.googleEngineVariant || 'google';
     const logoClass = engine === 'google' ? 'logo sans' : engine === 'google-old' ? 'logo old' : 'logo naver';
-    const searchTerm = (project.settings.googleQuery && project.settings.googleQuery.trim().length>0)
-      ? sanitizeText(project.settings.googleQuery)
-      : sanitizeText(project.messages[0]?.content || 'search query');
-    const suggestions = (project.settings.googleSuggestions||[]).map(line => {
+    const searchTerm = sanitizeText(s.googleQuery || 'search query');
+    
+    // Build suggestions dropdown
+    const suggestions = (s.googleSuggestions||[]).map(line => {
       const withBold = applyBoldMarkup(line);
       return `<div class="suggest-item">${sanitizeText(withBold)}</div>`;
     }).join('');
     const dropdown = suggestions.length ? `<div class="suggest-box">${suggestions}</div>` : '';
-    const stats = (project.settings.googleResultsCount || project.settings.googleResultsTime) ? `<p class="search-stats">${sanitizeText(`${project.settings.googleResultsCount||''}${project.settings.googleResultsCount&&project.settings.googleResultsTime? ' ' : ''}${project.settings.googleResultsTime ? '('+project.settings.googleResultsTime+')':''}`)}</p>` : '';
-    const dym = project.settings.googleDidYouMean ? `<p class="search-dym"><span class="search-dym1">Did you mean: </span><span class="search-dym2">${sanitizeText(project.settings.googleDidYouMean)}</span></p>` : '';
-    const body = `<p class="${logoClass}">${engine==='naver'
+    
+    // Result statistics (only if enabled)
+    const stats = s.googleShowStats && (s.googleResultsCount || s.googleResultsTime)
+      ? `<p class="search-stats">${sanitizeText(`${s.googleResultsCount||''}${s.googleResultsCount&&s.googleResultsTime? ' ' : ''}${s.googleResultsTime ? '('+s.googleResultsTime+')':''}`)}</p>`
+      : '';
+    
+    // Did you mean correction (only if enabled)
+    const dym = s.googleShowDidYouMean && s.googleDidYouMean
+      ? `<p class="search-dym"><span class="search-dym1">Did you mean: </span><span class="search-dym2">${sanitizeText(s.googleDidYouMean)}</span></p>`
+      : '';
+    
+    // Build logo
+    const logoHtml = engine === 'naver'
       ? `<span class="naver-green">NAVER</span>`
-      : engine==='google-old'
+      : engine === 'google-old'
         ? `<span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>`
-        : `<span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>`}
-      </p><div class="search-wrap"><p class="search-bar"><span>${searchTerm}</span></p>${dropdown}${stats}${dym}</div>`;
+        : `<span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>`;
+    
+    const body = `<p class="${logoClass}">${logoHtml}</p><div class="search-wrap"><p class="search-bar"><span>${searchTerm}</span></p>${dropdown}${stats}${dym}</div>`;
     const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
     return `<div class="chat">${body}${watermark}</div>`;
   }
@@ -89,30 +142,41 @@ export function buildHTML(project: SkinProject): string {
   }
 
   if (project.template === 'instagram') {
-    // For Instagram we treat first message as caption, use attachment or override image
-    const m = project.messages[0];
-    const captionUser = (project.settings.instagramUsernameOverride && project.settings.instagramUsernameOverride.trim().length>0)
-      ? project.settings.instagramUsernameOverride
-      : (m?.sender || 'user');
-    const captionText = m ? sanitizeText(m.content) : 'Caption text';
-    const imgOverride = project.settings.instagramImageUrl && project.settings.instagramImageUrl.trim().length>0 ? project.settings.instagramImageUrl : '';
-    const attachImg = !imgOverride && m?.attachments && m.attachments[0]?.url ? m.attachments[0].url : '';
-    const imageTag = (imgOverride || attachImg) ? `<img class="instImage" src="${imgOverride || attachImg}" alt="Post image" />` : '';
-    const avatarTag = m?.avatarUrl ? `<img class="instAvatar" src="${m.avatarUrl}" alt="${captionUser} avatar" />` : '';
-    const likesLine = project.settings.instagramLikes && project.settings.instagramLikes > 0 ? `<span class="likes"><b>${project.settings.instagramLikes}</b> likes</span>` : '';
-    const commentsLink = project.settings.instagramShowCommentsLink && project.settings.instagramCommentsCount && project.settings.instagramCommentsCount > 0 ? `<span class="comments-link">View all ${project.settings.instagramCommentsCount} comments</span>` : '';
-    const ts = project.settings.instagramTimestamp ? `<span class="instTimestamp">${sanitizeText(project.settings.instagramTimestamp)}</span>` : '';
-    const body = `<div class="inst"><p class="instBody">${avatarTag}<span class="instUser">${sanitizeText(captionUser)}</span>${imageTag}<span class="instText">${likesLine}<br/><b>${sanitizeText(captionUser)}</b> ${captionText}</span>${commentsLink}${ts}</p></div>`;
+    // Instagram uses dedicated settings fields, not messages array
+    const s = project.settings;
+    const username = s.instagramUsername || 'user';
+    const caption = sanitizeText(s.instagramCaption || '');
+    const imageTag = s.instagramImageUrl ? `<img class="instImage" src="${s.instagramImageUrl}" alt="Post image" />` : '';
+    const avatarTag = s.instagramAvatarUrl ? `<img class="instAvatar" src="${s.instagramAvatarUrl}" alt="${username} avatar" />` : '';
+    const location = s.instagramLocation ? `<span class="instLocation">📍 ${sanitizeText(s.instagramLocation)}</span>` : '';
+    const likesLine = s.instagramShowLikes && s.instagramLikes ? `<span class="likes"><b>${s.instagramLikes.toLocaleString()}</b> likes</span>` : '';
+    const commentsLink = s.instagramShowComments && s.instagramCommentsCount ? `<span class="comments-link">View all ${s.instagramCommentsCount} comments</span>` : '';
+    const ts = s.instagramTimestamp ? `<span class="instTimestamp">${sanitizeText(s.instagramTimestamp)}</span>` : '';
+    
+    const body = `<div class="inst">
+      <div class="instHeader">${avatarTag}<span class="instUser">${sanitizeText(username)}</span>${location}</div>
+      ${imageTag}
+      <div class="instContent">
+        ${likesLine ? `<div class="instLikes">${likesLine}</div>` : ''}
+        <div class="instCaption"><b>${sanitizeText(username)}</b> ${caption}</div>
+        ${commentsLink ? `<div class="instComments">${commentsLink}</div>` : ''}
+        ${ts ? `<div class="instTime">${ts}</div>` : ''}
+      </div>
+    </div>`;
     const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
     return `<div class="chat">${body}${watermark}</div>`;
   }
 
   if (project.template === 'discord') {
     const s = project.settings;
-    const header = s.discordShowHeader ? `<div class="dc-header"><span class="dc-hash">#</span><span class="dc-channel">${sanitizeText(s.discordChannelName||'general')}</span></div>` : '';
+    const channelName = sanitizeText(s.discordChannelName || 'general');
+    const serverName = s.discordServerName ? sanitizeText(s.discordServerName) : '';
+    const header = s.discordShowHeader 
+      ? `<div class="dc-header">${serverName ? `<span class="dc-server">${serverName}</span>` : ''}<span class="dc-hash">#</span><span class="dc-channel">${channelName}</span></div>` 
+      : '';
     const lines = project.messages.map(m => {
       const avatar = m.avatarUrl ? `<img class="dc-avatar" src="${m.avatarUrl}" alt="${sanitizeText(m.sender)} avatar" />` : `<span class="dc-avatar placeholder"></span>`;
-      const nameColor = m.roleColor || '#ffffff';
+      const nameColor = m.roleColor || (s.discordDarkMode !== false ? '#B9BBBE' : '#2E3338');
       const time = m.timestamp ? `<span class="dc-time">${sanitizeText(m.timestamp)}</span>` : '';
       const content = sanitizeText(m.content);
       return `<div class="dc-line">${avatar}<div class="dc-msg"><div class="dc-meta"><span class="dc-name" style="color:${nameColor}">${sanitizeText(m.sender)}</span>${time}</div><div class="dc-text">${content}</div></div></div>`;
@@ -128,6 +192,9 @@ export function buildHTML(project: SkinProject): string {
 
 function buildIOSCSS(s: any, senderBg: string, recvBg: string, neutralBg: string, maxWidth: number): string {
   return `#workskin .chat{width:80%;max-width:${maxWidth}px;margin:0 auto;display:flex;flex-direction:column;font-family:${s.fontFamily};}
+#workskin .chat-header{text-align:center;font-size:11px;color:rgba(255,255,255,0.5);padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:8px;}
+#workskin .chat-header .to-label{opacity:0.6;}
+#workskin .chat-header .contact-name{font-weight:600;}
 #workskin .row{display:flex;gap:8px;margin:6px 0;align-items:flex-end;flex-wrap:wrap;}
 #workskin img.avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;}
 #workskin dl.msg{margin:0;display:flex;flex-direction:column;}
@@ -139,14 +206,26 @@ function buildIOSCSS(s: any, senderBg: string, recvBg: string, neutralBg: string
 #workskin dd.bubble.in{background:${recvBg};border-bottom-left-radius:4px;}
 #workskin dd.bubble.in::after{content:"";position:absolute;left:-5px;bottom:0;width:10px;height:10px;background:${recvBg};border-bottom-right-radius:16px 14px;}
 #workskin dd.bubble .time{display:block;font-size:9px;opacity:0.6;margin-top:4px;}
+#workskin dd.bubble .reaction{position:absolute;bottom:-8px;right:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:2px 6px;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+#workskin dd.status-indicator{font-size:9px;color:rgba(255,255,255,0.5);text-align:right;margin:2px 10px 0 0;}
 #workskin dd.attach{margin-top:4px;}
 #workskin img.attach-img{max-width:200px;border-radius:8px;display:block;}
+#workskin .row.typing{align-items:center;gap:6px;}
+#workskin .typing-bubble{background:${recvBg};padding:8px 12px;border-radius:16px;display:flex;gap:3px;align-items:center;}
+#workskin .typing-bubble .dot{width:8px;height:8px;background:rgba(255,255,255,0.6);border-radius:50%;animation:typing 1.4s infinite;}
+#workskin .typing-bubble .dot:nth-child(2){animation-delay:0.2s;}
+#workskin .typing-bubble .dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typing{0%,60%,100%{opacity:0.3;}30%{opacity:1;}}
+#workskin .typing-label{font-size:10px;color:rgba(255,255,255,0.6);}
 #workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}`;
 }
 
 function buildAndroidCSS(s: any, senderBg: string, recvBg: string, neutralBg: string, maxWidth: number): string {
   return `#workskin .chat{width:80%;max-width:${maxWidth}px;margin:0 auto;display:flex;flex-direction:column;font-family:${s.fontFamily};background:rgba(230,235,230,0.2);padding:12px;border-radius:8px;}
+#workskin .chat-header{padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:12px;}
+#workskin .chat-header .contact-name{font-size:16px;font-weight:600;color:rgba(0,0,0,0.87);display:block;}
+#workskin .chat-header .status{font-size:12px;color:rgba(0,0,0,0.54);display:block;margin-top:2px;}
 #workskin .row{display:flex;gap:8px;margin:8px 0;align-items:flex-start;flex-wrap:wrap;}
 #workskin img.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;}
 #workskin dl.msg{margin:0;display:flex;flex-direction:column;flex:1;}
@@ -156,19 +235,42 @@ function buildAndroidCSS(s: any, senderBg: string, recvBg: string, neutralBg: st
 #workskin dd.bubble.out{background:${senderBg};color:#000;border-radius:8px 8px 2px 8px;margin-left:auto;}
 #workskin dd.bubble.in{background:${recvBg};border-radius:8px 8px 8px 2px;}
 #workskin dd.bubble .time{display:inline;font-size:10px;opacity:0.5;margin-left:8px;float:right;}
+#workskin dd.bubble .reaction{position:absolute;bottom:-8px;right:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:2px 6px;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+#workskin dd.checkmarks{font-size:10px;color:#4CAF50;text-align:right;margin:2px 10px 0 0;}
 #workskin dd.attach{margin-top:4px;}
 #workskin img.attach-img{max-width:200px;border-radius:8px;display:block;}
+#workskin .row.typing{align-items:center;gap:6px;}
+#workskin .typing-bubble{background:${recvBg};padding:10px 14px;border-radius:8px;display:flex;gap:4px;align-items:center;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
+#workskin .typing-bubble .dot{width:8px;height:8px;background:rgba(0,0,0,0.4);border-radius:50%;animation:typing 1.4s infinite;}
+#workskin .typing-bubble .dot:nth-child(2){animation-delay:0.2s;}
+#workskin .typing-bubble .dot:nth-child(3){animation-delay:0.4s;}
+@keyframes typing{0%,60%,100%{opacity:0.3;}30%{opacity:1;}}
+#workskin .typing-label{font-size:11px;color:rgba(0,0,0,0.6);}
 #workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}`;
 }
 
 function buildNoteCSS(s: any, senderBg: string, maxWidth: number): string {
+  const style = s.noteStyle || 'system';
+  const align = s.noteAlignment || 'center';
+  const justifyContent = align === 'center' ? 'center' : align === 'left' ? 'flex-start' : 'flex-end';
+  const textAlign = align;
+  
+  // Different styles get different visual treatments
+  const styleCss = style === 'system'
+    ? `text-transform:uppercase;letter-spacing:1px;font-weight:700;border:2px solid rgba(255,255,255,0.3);`
+    : style === 'document'
+    ? `text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-top:2px solid rgba(255,255,255,0.4);border-bottom:2px solid rgba(255,255,255,0.4);padding:12px 20px;`
+    : style === 'letter'
+    ? `font-family:Georgia,serif;font-style:italic;border-left:3px solid rgba(255,255,255,0.5);padding-left:16px;`
+    : `font-weight:400;border:1px solid rgba(255,255,255,0.2);`;
+  
   return `#workskin .chat{width:80%;max-width:${maxWidth}px;margin:20px auto;display:flex;flex-direction:column;font-family:${s.fontFamily};}
-#workskin .row{display:flex;justify-content:center;margin:12px 0;width:100%;}
-#workskin dl.msg{margin:0;display:flex;flex-direction:column;align-items:center;max-width:100%;}
-#workskin dt.sender{font-size:11px;color:rgba(255,255,255,0.5);margin:0 0 4px 0;font-weight:600;}
+#workskin .row{display:flex;justify-content:${justifyContent};margin:12px 0;width:100%;}
+#workskin dl.msg{margin:0;display:flex;flex-direction:column;align-items:${align === 'center' ? 'center' : align === 'left' ? 'flex-start' : 'flex-end'};max-width:100%;}
+#workskin dt.sender{font-size:11px;color:rgba(255,255,255,0.6);margin:0 0 6px 0;font-weight:600;${textAlign === 'center' ? '' : 'text-align:'+textAlign+';'}}
 #workskin dd{margin:0;max-width:100%;}
-#workskin dd.bubble{background:${senderBg};color:#fff;padding:10px 16px;border-radius:12px;line-height:1.4;text-align:center;max-width:100%;word-wrap:break-word;word-break:break-word;border:1px solid rgba(255,255,255,0.1);box-sizing:border-box;}
+#workskin dd.bubble{background:${senderBg};color:#fff;padding:10px 16px;border-radius:8px;line-height:1.4;text-align:${textAlign};max-width:100%;word-wrap:break-word;word-break:break-word;box-sizing:border-box;${styleCss}}
 #workskin dd.bubble .time{display:block;font-size:9px;opacity:0.6;margin-top:6px;}
 #workskin .wm{margin-top:16px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}`;
@@ -224,15 +326,18 @@ function buildGoogleCSS(maxWidth: number): string {
 
 function buildInstagramCSS(maxWidth: number): string {
   return `#workskin .chat{max-width:${maxWidth}px;margin:auto;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;}
-#workskin .inst{max-width:300px;display:table;margin:auto;}
-#workskin .instBody{overflow:hidden;background:#fff;border:.1em solid #ddd;border-radius:.3em;min-width:100%;position:relative;padding:.7em;margin-left:-1em;}
-#workskin .instAvatar{width:30px;height:auto;float:left;margin:0 .3em .5em -.1em;border:.1em solid #ddd;border-radius:50%;}
-#workskin .instUser{color:#343436;position:relative;top:.1em;font-size:16px;font-weight:bold;}
-#workskin .instImage{width:111%;height:auto;margin:0 -1em 0 -1em;}
-#workskin .instText{display:inline-block;font-size:14px;border-top:1px solid #ADADAD;margin:.4em 0 .2em 0;padding:.4em 0 .2em 0;}
-#workskin .likes{font-size:14px;}
-#workskin .instTimestamp{display:inline-block;width:100%;color:#ADADAD;text-transform:uppercase;font-size:12px;margin-top:.4em;}
-#workskin .comments-link{display:inline-block;width:100%;color:#ADADAD;font-size:14px;margin-top:.2em;}
+#workskin .inst{max-width:400px;background:#fff;border:1px solid #dbdbdb;border-radius:8px;overflow:hidden;margin:auto;}
+#workskin .instHeader{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #efefef;}
+#workskin .instAvatar{width:32px;height:32px;border-radius:50%;object-fit:cover;}
+#workskin .instUser{font-size:14px;font-weight:600;color:#262626;}
+#workskin .instLocation{font-size:12px;color:#737373;margin-left:auto;}
+#workskin .instImage{width:100%;display:block;background:#fafafa;}
+#workskin .instContent{padding:12px 16px;}
+#workskin .instLikes{font-size:14px;font-weight:600;color:#262626;margin-bottom:8px;}
+#workskin .instCaption{font-size:14px;color:#262626;line-height:1.4;margin-bottom:4px;}
+#workskin .instCaption b{font-weight:600;}
+#workskin .instComments{font-size:14px;color:#737373;margin-top:4px;margin-bottom:4px;}
+#workskin .instTime{font-size:10px;color:#737373;text-transform:uppercase;letter-spacing:0.2px;margin-top:8px;padding-top:8px;border-top:1px solid #efefef;}
 #workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}`;
 }
 
@@ -240,8 +345,10 @@ function buildDiscordCSS(maxWidth: number, dark: boolean): string {
   const bg = dark ? '#2B2D31' : '#FFFFFF';
   const text = dark ? '#DBDEE1' : '#2E3338';
   const meta = dark ? '#949BA4' : '#5865F2';
+  const serverText = dark ? '#949BA4' : '#737373';
   return `#workskin .chat.dc-wrap{max-width:${maxWidth}px;margin:auto;font-family:Arial,Helvetica,sans-serif;background:${bg};padding:12px 0;border-radius:6px;}
 #workskin .dc-header{font-size:14px;font-weight:600;padding:0 16px 8px 16px;color:${text};border-bottom:1px solid ${dark?'#1f2124':'#e3e5e8'};margin-bottom:8px;}
+#workskin .dc-header .dc-server{color:${serverText};font-size:12px;margin-right:8px;font-weight:400;}
 #workskin .dc-header .dc-hash{color:${meta};margin-right:4px;}
 #workskin .dc-line{display:flex;padding:4px 16px 4px 16px;align-items:flex-start;gap:12px;}
 #workskin .dc-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
