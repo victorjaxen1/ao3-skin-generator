@@ -1,0 +1,64 @@
+import React from 'react';
+import { SkinProject, Message } from '../lib/schema';
+
+interface Props { project: SkinProject; onChange: (p: SkinProject) => void; }
+
+export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
+  function update<K extends keyof SkinProject>(key: K, value: SkinProject[K]) {
+    onChange({ ...project, [key]: value });
+  }
+  function updateSettings<K extends keyof SkinProject['settings']>(key: K, value: SkinProject['settings'][K]) {
+    update('settings', { ...project.settings, [key]: value });
+  }
+  function updateMsg(id: string, patch: Partial<Message>) {
+    const messages = project.messages.map(m => m.id === id ? { ...m, ...patch } : m);
+    update('messages', messages);
+  }
+  function addMessage() {
+    const newMsg: Message = {
+      id: crypto.randomUUID(), sender: 'New', content: 'Message', outgoing: false
+    };
+    update('messages', [...project.messages, newMsg]);
+  }
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">Editor</h2>
+      <div className="grid grid-cols-2 gap-4">
+        <label className="flex flex-col text-sm">Sender Color
+          <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
+        </label>
+        <label className="flex flex-col text-sm">Receiver Color
+          <input type="color" value={project.settings.receiverColor} onChange={e=>updateSettings('receiverColor', e.target.value)} />
+        </label>
+        <label className="flex flex-col text-sm">Bubble Opacity
+          <input type="number" min={0} max={1} step={0.05} value={project.settings.bubbleOpacity} onChange={e=>updateSettings('bubbleOpacity', parseFloat(e.target.value))} />
+        </label>
+        <label className="flex flex-col text-sm">Max Width (px)
+          <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={project.settings.useDarkNeutral} onChange={e=>updateSettings('useDarkNeutral', e.target.checked)} /> Dark Neutral Layer
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
+        </label>
+      </div>
+      <div>
+        <h3 className="font-medium text-sm mb-2">Messages</h3>
+        <div className="space-y-2">
+          {project.messages.map(m => (
+            <div key={m.id} className="border p-2 rounded text-sm space-y-1">
+              <div className="flex gap-2">
+                <input className="border px-1 flex-1" value={m.sender} onChange={e=>updateMsg(m.id,{sender:e.target.value})} />
+                <label className="flex items-center gap-1"><input type="checkbox" checked={m.outgoing} onChange={e=>updateMsg(m.id,{outgoing:e.target.checked})} /> Outgoing</label>
+              </div>
+              <textarea className="border w-full px-1" rows={2} value={m.content} onChange={e=>updateMsg(m.id,{content:e.target.value})} />
+              <input className="border px-1 w-24" placeholder="time" value={m.timestamp||''} onChange={e=>updateMsg(m.id,{timestamp:e.target.value})} />
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={addMessage} className="mt-2 text-xs px-2 py-1 bg-blue-600 text-white rounded">Add Message</button>
+      </div>
+    </div>
+  );
+};
