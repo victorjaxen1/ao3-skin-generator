@@ -1,5 +1,6 @@
 import { SkinProject, Message } from './schema';
 import { sanitizeText } from './sanitize';
+import { PLATFORM_ASSETS, FALLBACK_TEXT } from './platformAssets';
 
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace('#','');
@@ -34,8 +35,15 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   if (template === 'ios' && msg.outgoing && project.settings.iosShowDelivered && msg.status === 'delivered') {
     statusIndicator = `<dd class="status-indicator">Delivered</dd>`;
   } else if (template === 'android' && msg.outgoing && project.settings.androidCheckmarks) {
-    const checks = msg.status === 'read' ? '✓✓' : msg.status === 'delivered' ? '✓✓' : msg.status === 'sent' ? '✓' : '';
-    if (checks) statusIndicator = `<dd class="checkmarks">${checks}</dd>`;
+    let checkImg = '';
+    if (msg.status === 'read') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkRead;
+    else if (msg.status === 'delivered') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkDelivered;
+    else if (msg.status === 'sent') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkSent;
+    
+    if (checkImg) {
+      const fallback = msg.status === 'read' || msg.status === 'delivered' ? FALLBACK_TEXT.whatsapp.checkDelivered : FALLBACK_TEXT.whatsapp.checkSent;
+      statusIndicator = `<dd class="checkmarks"><img src="${checkImg}" alt="${msg.status}" class="check-icon" onerror="this.outerHTML='${fallback}'" /></dd>`;
+    }
   }
   
   const atts = (msg.attachments||[]).map(a => `<dd class="attach"><span class="visually-hidden">Image:</span><img src="${a.url}" alt="${a.alt||''}" class="attach-img"/></dd>`).join('');
@@ -50,20 +58,20 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
     const handle = (project.settings.twitterHandle && project.settings.twitterHandle.trim().length>0)
       ? `@${project.settings.twitterHandle.replace(/^@/, '')}`
       : `@${msg.sender.toLowerCase().replace(/\s+/g, '')}`;
-    const verified = project.settings.twitterVerified ? `<span class="verified" aria-label="Verified">✔</span>` : '';
+    const verified = project.settings.twitterVerified ? `<img src="${PLATFORM_ASSETS.twitter.verifiedBadge}" alt="Verified" class="verified-badge" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span class=\"verified\">${FALLBACK_TEXT.twitter.verified}</span>')" />` : '';
     const timestampLine = project.settings.twitterTimestamp || (msg.timestamp ? msg.timestamp : '');
-    const metrics = project.settings.twitterShowMetrics ? `<div class="metrics">${project.settings.twitterReplies ? `<span class="metric replies" title="Replies">↩ ${project.settings.twitterReplies}</span>`:''}${project.settings.twitterRetweets ? `<span class="metric retweets" title="Retweets">🔁 ${project.settings.twitterRetweets}</span>`:''}${project.settings.twitterLikes ? `<span class="metric likes" title="Likes">❤ ${project.settings.twitterLikes}</span>`:''}</div>` : '';
+    const metrics = project.settings.twitterShowMetrics ? `<div class="metrics">${project.settings.twitterReplies ? `<span class="metric replies" title="Replies"><img src="${PLATFORM_ASSETS.twitter.replyIcon}" alt="Replies" class="metric-icon" onerror="this.outerHTML='${FALLBACK_TEXT.twitter.reply}'" /> ${project.settings.twitterReplies}</span>`:''}${project.settings.twitterRetweets ? `<span class="metric retweets" title="Retweets"><img src="${PLATFORM_ASSETS.twitter.retweetIcon}" alt="Retweets" class="metric-icon" onerror="this.outerHTML='${FALLBACK_TEXT.twitter.retweet}'" /> ${project.settings.twitterRetweets}</span>`:''}${project.settings.twitterLikes ? `<span class="metric likes" title="Likes"><img src="${PLATFORM_ASSETS.twitter.likeIcon}" alt="Likes" class="metric-icon" onerror="this.outerHTML='${FALLBACK_TEXT.twitter.like}'" /> ${project.settings.twitterLikes}</span>`:''}</div>` : '';
     const contextLink = project.settings.twitterContextLinkText ? `<div class="context">${sanitizeText(project.settings.twitterContextLinkText)}</div>` : '';
     let quote = '';
     if (project.settings.twitterQuoteEnabled) {
       const qAvatar = project.settings.twitterQuoteAvatar ? `<img src="${project.settings.twitterQuoteAvatar}" alt="Quote avatar" class="quote-avatar" />` : '';
       const qHandle = project.settings.twitterQuoteHandle ? `@${project.settings.twitterQuoteHandle.replace(/^@/, '')}` : '';
-      const qVerified = project.settings.twitterQuoteVerified ? `<span class="quote-verified" aria-label="Verified">✔</span>` : '';
+      const qVerified = project.settings.twitterQuoteVerified ? `<img src="${PLATFORM_ASSETS.twitter.verifiedBadge}" alt="Verified" class="quote-verified-badge" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span class=\"quote-verified\">${FALLBACK_TEXT.twitter.verified}</span>')" />` : '';
       const qText = sanitizeText(project.settings.twitterQuoteText || '');
       const qImage = project.settings.twitterQuoteImage ? `<img src="${project.settings.twitterQuoteImage}" alt="Quote image" class="quote-image" />` : '';
       quote = `<div class="quote"><div class="quote-head">${qAvatar}<span class="quote-name">${sanitizeText(project.settings.twitterQuoteName||'')}</span>${qVerified}<span class="quote-handle">${qHandle}</span></div><div class="quote-body">${qText}${qImage}</div></div>`;
     }
-    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><span class="bird" aria-hidden="true">🐦</span></div><div class="body">${sanitized}${quote}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
+    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><img src="${PLATFORM_ASSETS.twitter.logo}" alt="Twitter" class="twitter-logo" onerror="this.outerHTML='<span class=\"bird\">${FALLBACK_TEXT.twitter.bird}</span>'" /></div><div class="body">${sanitized}${quote}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
   }
   
   if (template === 'google') {
@@ -148,7 +156,7 @@ export function buildHTML(project: SkinProject): string {
     const caption = sanitizeText(s.instagramCaption || '');
     const imageTag = s.instagramImageUrl ? `<img class="instImage" src="${s.instagramImageUrl}" alt="Post image" />` : '';
     const avatarTag = s.instagramAvatarUrl ? `<img class="instAvatar" src="${s.instagramAvatarUrl}" alt="${username} avatar" />` : '';
-    const location = s.instagramLocation ? `<span class="instLocation">📍 ${sanitizeText(s.instagramLocation)}</span>` : '';
+    const location = s.instagramLocation ? `<span class="instLocation"><img src="${PLATFORM_ASSETS.instagram.locationPin}" alt="Location" class="location-icon" onerror="this.outerHTML='${FALLBACK_TEXT.instagram.location}'" /> ${sanitizeText(s.instagramLocation)}</span>` : '';
     const likesLine = s.instagramShowLikes && s.instagramLikes ? `<span class="likes"><b>${s.instagramLikes.toLocaleString()}</b> likes</span>` : '';
     const commentsLink = s.instagramShowComments && s.instagramCommentsCount ? `<span class="comments-link">View all ${s.instagramCommentsCount} comments</span>` : '';
     const ts = s.instagramTimestamp ? `<span class="instTimestamp">${sanitizeText(s.instagramTimestamp)}</span>` : '';
@@ -237,6 +245,7 @@ function buildAndroidCSS(s: any, senderBg: string, recvBg: string, neutralBg: st
 #workskin dd.bubble .time{display:inline;font-size:10px;opacity:0.5;margin-left:8px;float:right;}
 #workskin dd.bubble .reaction{position:absolute;bottom:-8px;right:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:2px 6px;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
 #workskin dd.checkmarks{font-size:10px;color:#4CAF50;text-align:right;margin:2px 10px 0 0;}
+#workskin dd.checkmarks .check-icon{width:16px;height:10px;vertical-align:middle;}
 #workskin dd.attach{margin-top:4px;}
 #workskin img.attach-img{max-width:200px;border-radius:8px;display:block;}
 #workskin .row.typing{align-items:center;gap:6px;}
@@ -283,6 +292,9 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 #workskin .tweet .head{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;line-height:1;}
 #workskin .tweet .name{font-weight:700;}
 #workskin .tweet .verified{position:relative;bottom:2px;display:inline-block;font-weight:normal;text-align:center;font-size:10px;width:15px;height:15px;background-color:${s.senderColor};color:#fff;border-radius:50%;}
+#workskin .tweet .verified-badge{width:16px;height:16px;display:inline-block;vertical-align:middle;}
+#workskin .tweet .twitter-logo{width:16px;height:16px;margin-left:auto;}
+#workskin .tweet .metric-icon{width:14px;height:14px;vertical-align:middle;}
 #workskin .tweet .handle{color:#697882;font-weight:400;}
 #workskin .tweet .bird{margin-left:auto;color:${s.senderColor};}
 #workskin .tweet .body{clear:both;margin-top:8px;font-size:15px;line-height:1.35;word-wrap:break-word;}
@@ -295,6 +307,7 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 #workskin .tweet .quote-head{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;}
 #workskin .tweet .quote-avatar{width:24px;height:24px;border-radius:12px;object-fit:cover;}
 #workskin .tweet .quote-verified{position:relative;bottom:2px;display:inline-block;font-weight:normal;text-align:center;font-size:9px;width:12px;height:12px;background-color:${s.senderColor};color:#fff;border-radius:50%;}
+#workskin .tweet .quote-verified-badge{width:12px;height:12px;display:inline-block;vertical-align:middle;}
 #workskin .tweet .quote-handle{color:#697882;font-weight:400;font-size:12px;}
 #workskin .tweet .quote-body{margin-top:6px;font-size:13px;line-height:1.3;}
 #workskin .tweet .quote-image{width:100%;height:auto;border-radius:.3em;margin-top:6px;}
@@ -331,6 +344,7 @@ function buildInstagramCSS(maxWidth: number): string {
 #workskin .instAvatar{width:32px;height:32px;border-radius:50%;object-fit:cover;}
 #workskin .instUser{font-size:14px;font-weight:600;color:#262626;}
 #workskin .instLocation{font-size:12px;color:#737373;margin-left:auto;}
+#workskin .instLocation .location-icon{width:12px;height:12px;vertical-align:middle;margin-right:2px;}
 #workskin .instImage{width:100%;display:block;background:#fafafa;}
 #workskin .instContent{padding:12px 16px;}
 #workskin .instLikes{font-size:14px;font-weight:600;color:#262626;margin-bottom:8px;}
