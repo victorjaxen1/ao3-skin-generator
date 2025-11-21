@@ -8,6 +8,21 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
   const [uploading, setUploading] = useState<string | null>(null);
   
   function update<K extends keyof SkinProject>(key: K, value: SkinProject[K]) {
+    // Auto-adjust colors when switching templates
+    if (key === 'template') {
+      const newSettings = { ...project.settings };
+      if (value === 'android') {
+        newSettings.senderColor = '#dcf8c6'; // WhatsApp green
+        newSettings.receiverColor = '#ffffff';
+      } else if (value === 'note') {
+        newSettings.senderColor = '#4a5568'; // Gray for system messages
+      } else if (value === 'ios') {
+        newSettings.senderColor = '#1d9bf0'; // iOS blue
+        newSettings.receiverColor = '#ececec';
+      }
+      onChange({ ...project, [key]: value, settings: newSettings });
+      return;
+    }
     onChange({ ...project, [key]: value });
   }
   function updateSettings<K extends keyof SkinProject['settings']>(key: K, value: SkinProject['settings'][K]) {

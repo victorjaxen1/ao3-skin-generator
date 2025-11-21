@@ -10,17 +10,24 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function msgHTML(msg: Message): string {
+function msgHTML(msg: Message, template: string): string {
   const sanitized = sanitizeText(msg.content);
   const avatar = msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.sender} avatar" class="avatar" />` : '';
   const who = `<dt class="sender">${msg.sender}</dt>`;
   const bubble = `<dd class="bubble ${msg.outgoing ? 'out' : 'in'}">${sanitized}${msg.timestamp ? `<span class="time">${msg.timestamp}</span>`: ''}</dd>`;
   const atts = (msg.attachments||[]).map(a => `<dd class="attach"><span class="visually-hidden">Image:</span><img src="${a.url}" alt="${a.alt||''}" class="attach-img"/></dd>`).join('');
+  
+  if (template === 'note') {
+    // Note template: no avatar, centered
+    return `<div class="row"><dl class="msg">${who}${bubble}${atts}</dl></div>`;
+  }
+  
+  // iOS/Android: show avatar and normal layout
   return `<div class="row">${avatar}<dl class="msg">${who}${bubble}${atts}</dl></div>`;
 }
 
 export function buildHTML(project: SkinProject): string {
-  const body = project.messages.map(m => msgHTML(m)).join('');
+  const body = project.messages.map(m => msgHTML(m, project.template)).join('');
   const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
   return `<div class="chat">${body}${watermark}</div>`;
 }
@@ -43,16 +50,16 @@ function buildIOSCSS(s: any, senderBg: string, recvBg: string, neutralBg: string
 }
 
 function buildAndroidCSS(s: any, senderBg: string, recvBg: string, neutralBg: string, maxWidth: number): string {
-  return `#workskin .chat{width:80%;max-width:${maxWidth}px;margin:0 auto;display:flex;flex-direction:column;font-family:${s.fontFamily};background:rgba(230,240,230,0.3);padding:12px;border-radius:8px;}
-#workskin .row{display:flex;gap:8px;margin:8px 0;align-items:flex-end;flex-wrap:wrap;}
-#workskin img.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;}
-#workskin dl.msg{margin:0;display:flex;flex-direction:column;}
-#workskin dt.sender{font-size:11px;color:rgba(0,0,0,0.5);margin:0 4px 2px 4px;font-weight:600;}
+  return `#workskin .chat{width:80%;max-width:${maxWidth}px;margin:0 auto;display:flex;flex-direction:column;font-family:${s.fontFamily};background:rgba(230,235,230,0.2);padding:12px;border-radius:8px;}
+#workskin .row{display:flex;gap:8px;margin:8px 0;align-items:flex-start;flex-wrap:wrap;}
+#workskin img.avatar{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+#workskin dl.msg{margin:0;display:flex;flex-direction:column;flex:1;}
+#workskin dt.sender{font-size:12px;color:rgba(100,100,100,0.8);margin:0 0 3px 8px;font-weight:600;}
 #workskin dd{margin:0;}
-#workskin dd.bubble{position:relative;max-width:75%;padding:8px 12px;border-radius:8px;line-height:1.4;word-wrap:break-word;background:${neutralBg};color:inherit;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
-#workskin dd.bubble.out{background:${senderBg};color:#000;border-radius:8px 8px 0 8px;}
-#workskin dd.bubble.in{background:${recvBg};border-radius:8px 8px 8px 0;}
-#workskin dd.bubble .time{display:block;font-size:10px;opacity:0.5;margin-top:4px;text-align:right;}
+#workskin dd.bubble{position:relative;max-width:85%;padding:8px 12px;border-radius:8px;line-height:1.4;word-wrap:break-word;background:${neutralBg};color:inherit;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
+#workskin dd.bubble.out{background:${senderBg};color:#000;border-radius:8px 8px 2px 8px;margin-left:auto;}
+#workskin dd.bubble.in{background:${recvBg};border-radius:8px 8px 8px 2px;}
+#workskin dd.bubble .time{display:inline;font-size:10px;opacity:0.5;margin-left:8px;float:right;}
 #workskin dd.attach{margin-top:4px;}
 #workskin img.attach-img{max-width:200px;border-radius:8px;display:block;}
 #workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}
