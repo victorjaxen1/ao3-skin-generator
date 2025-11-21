@@ -40,10 +40,17 @@ export interface SkinSettings {
   googleResultsTime?: string; // e.g. "0.56 seconds"
   googleDidYouMean?: string; // correction term (Captain Jack Sparrow)
   googleEngineVariant?: 'google' | 'google-old' | 'naver';
+  // Instagram specific
+  instagramUsernameOverride?: string;
+  instagramLikes?: number;
+  instagramCommentsCount?: number;
+  instagramShowCommentsLink?: boolean;
+  instagramTimestamp?: string;
+  instagramImageUrl?: string; // override if not using message attachment
 }
 export interface SkinProject {
   id: string;
-  template: 'ios' | 'android' | 'note' | 'twitter' | 'google';
+  template: 'ios' | 'android' | 'note' | 'twitter' | 'google' | 'instagram';
   settings: SkinSettings;
   messages: Message[];
 }
@@ -80,6 +87,12 @@ export const defaultProject = (): SkinProject => ({
     googleResultsTime: '',
     googleDidYouMean: '',
     googleEngineVariant: 'google',
+    instagramUsernameOverride: '',
+    instagramLikes: 0,
+    instagramCommentsCount: 0,
+    instagramShowCommentsLink: true,
+    instagramTimestamp: '',
+    instagramImageUrl: '',
   },
   messages: [
     {

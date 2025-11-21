@@ -21,6 +21,9 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
         newSettings.receiverColor = '#f5f8fa';
       } else if (value === 'google') {
         newSettings.senderColor = '#4285F4'; // Google blue
+      } else if (value === 'instagram') {
+        newSettings.senderColor = '#E1306C'; // Instagram magenta
+        newSettings.receiverColor = '#FDFDFD';
       } else if (value === 'ios') {
         newSettings.senderColor = '#1d9bf0'; // iOS blue
         newSettings.receiverColor = '#ececec';
@@ -73,6 +76,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <option value="note">Note/System Message</option>
             <option value="twitter">Twitter Post</option>
             <option value="google">Google Search</option>
+            <option value="instagram">Instagram Post</option>
           </select>
         </label>
       </div>
@@ -180,6 +184,32 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <textarea rows={4} className="border w-full px-1" value={(project.settings.googleSuggestions||[]).join('\n')} onChange={e=>updateSettings('googleSuggestions', e.target.value.split(/\r?\n/).filter(l=>l.trim().length>0))} placeholder="who is the current green lantern\nwho is the current queen of genovia" />
             <p className="text-[10px] text-gray-600">Wrap parts to bold in *stars* or use <b>HTML &lt;b&gt; tags</b>. Newline separated.</p>
           </div>
+        </div>
+      )}
+      {project.template === 'instagram' && (
+        <div className="border rounded p-3 space-y-2 bg-white/50">
+          <h3 className="text-sm font-medium">Instagram Options</h3>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <label className="flex flex-col col-span-2">Username Override
+              <input className="border px-1" value={project.settings.instagramUsernameOverride||''} onChange={e=>updateSettings('instagramUsernameOverride', e.target.value)} placeholder="kayorona" />
+            </label>
+            <label className="flex flex-col">Likes
+              <input type="number" className="border px-1" value={project.settings.instagramLikes||0} onChange={e=>updateSettings('instagramLikes', parseInt(e.target.value)||0)} />
+            </label>
+            <label className="flex flex-col">Comments Count
+              <input type="number" className="border px-1" value={project.settings.instagramCommentsCount||0} onChange={e=>updateSettings('instagramCommentsCount', parseInt(e.target.value)||0)} />
+            </label>
+            <label className="flex items-center gap-2 col-span-2">Show Comments Link
+              <input type="checkbox" checked={project.settings.instagramShowCommentsLink||false} onChange={e=>updateSettings('instagramShowCommentsLink', e.target.checked)} />
+            </label>
+            <label className="flex flex-col col-span-2">Timestamp
+              <input className="border px-1" value={project.settings.instagramTimestamp||''} onChange={e=>updateSettings('instagramTimestamp', e.target.value)} placeholder="May 5, 2014" />
+            </label>
+            <label className="flex flex-col col-span-2">Image URL Override
+              <input className="border px-1" value={project.settings.instagramImageUrl||''} onChange={e=>updateSettings('instagramImageUrl', e.target.value)} placeholder="https://..." />
+            </label>
+          </div>
+          <p className="text-[10px] text-gray-600">First message caption text + optional attachment image if no override provided.</p>
         </div>
       )}
       <div>

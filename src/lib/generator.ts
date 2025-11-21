@@ -88,6 +88,25 @@ export function buildHTML(project: SkinProject): string {
     return `<div class="chat tweets">${tweets}${watermark}</div>`;
   }
 
+  if (project.template === 'instagram') {
+    // For Instagram we treat first message as caption, use attachment or override image
+    const m = project.messages[0];
+    const captionUser = (project.settings.instagramUsernameOverride && project.settings.instagramUsernameOverride.trim().length>0)
+      ? project.settings.instagramUsernameOverride
+      : (m?.sender || 'user');
+    const captionText = m ? sanitizeText(m.content) : 'Caption text';
+    const imgOverride = project.settings.instagramImageUrl && project.settings.instagramImageUrl.trim().length>0 ? project.settings.instagramImageUrl : '';
+    const attachImg = !imgOverride && m?.attachments && m.attachments[0]?.url ? m.attachments[0].url : '';
+    const imageTag = (imgOverride || attachImg) ? `<img class="instImage" src="${imgOverride || attachImg}" alt="Post image" />` : '';
+    const avatarTag = m?.avatarUrl ? `<img class="instAvatar" src="${m.avatarUrl}" alt="${captionUser} avatar" />` : '';
+    const likesLine = project.settings.instagramLikes && project.settings.instagramLikes > 0 ? `<span class="likes"><b>${project.settings.instagramLikes}</b> likes</span>` : '';
+    const commentsLink = project.settings.instagramShowCommentsLink && project.settings.instagramCommentsCount && project.settings.instagramCommentsCount > 0 ? `<span class="comments-link">View all ${project.settings.instagramCommentsCount} comments</span>` : '';
+    const ts = project.settings.instagramTimestamp ? `<span class="instTimestamp">${sanitizeText(project.settings.instagramTimestamp)}</span>` : '';
+    const body = `<div class="inst"><p class="instBody">${avatarTag}<span class="instUser">${sanitizeText(captionUser)}</span>${imageTag}<span class="instText">${likesLine}<br/><b>${sanitizeText(captionUser)}</b> ${captionText}</span>${commentsLink}${ts}</p></div>`;
+    const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
+    return `<div class="chat">${body}${watermark}</div>`;
+  }
+
   const body = project.messages.map(m => msgHTML(m, project.template, project)).join('');
   const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
   return `<div class="chat">${body}${watermark}</div>`;
@@ -189,6 +208,20 @@ function buildGoogleCSS(maxWidth: number): string {
 #workskin .wm{margin-top:24px;font-size:10px;opacity:0.5;text-align:center;}`;
 }
 
+function buildInstagramCSS(maxWidth: number): string {
+  return `#workskin .chat{max-width:${maxWidth}px;margin:auto;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;}
+#workskin .inst{max-width:300px;display:table;margin:auto;}
+#workskin .instBody{overflow:hidden;background:#fff;border:.1em solid #ddd;border-radius:.3em;min-width:100%;position:relative;padding:.7em;margin-left:-1em;}
+#workskin .instAvatar{width:30px;height:auto;float:left;margin:0 .3em .5em -.1em;border:.1em solid #ddd;border-radius:50%;}
+#workskin .instUser{color:#343436;position:relative;top:.1em;font-size:16px;font-weight:bold;}
+#workskin .instImage{width:111%;height:auto;margin:0 -1em 0 -1em;}
+#workskin .instText{display:inline-block;font-size:14px;border-top:1px solid #ADADAD;margin:.4em 0 .2em 0;padding:.4em 0 .2em 0;}
+#workskin .likes{font-size:14px;}
+#workskin .instTimestamp{display:inline-block;width:100%;color:#ADADAD;text-transform:uppercase;font-size:12px;margin-top:.4em;}
+#workskin .comments-link{display:inline-block;width:100%;color:#ADADAD;font-size:14px;margin-top:.2em;}
+#workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}`;
+}
+
 export function buildCSS(project: SkinProject): string {
   const s = project.settings;
   const senderBg = hexToRgba(s.senderColor, s.bubbleOpacity);
@@ -205,6 +238,8 @@ export function buildCSS(project: SkinProject): string {
       return buildTwitterCSS(s, senderBg, maxWidth);
     case 'google':
       return buildGoogleCSS(maxWidth);
+    case 'instagram':
+      return buildInstagramCSS(maxWidth);
     case 'ios':
     default:
       return buildIOSCSS(s, senderBg, recvBg, neutralBg, maxWidth);
