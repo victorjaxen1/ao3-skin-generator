@@ -30,7 +30,14 @@ export default function HomePage() {
           <ExportPanel project={project} />
         </div>
       </div>
-      <footer className="mt-6 text-xs opacity-70">Feedback welcome. Accessibility-first, media-query-free design.</footer>
+      <footer className="mt-6 text-center space-y-2">
+        <div className="text-xs opacity-70">Feedback welcome. Accessibility-first, media-query-free design for AO3.</div>
+        <div className="text-sm">
+          <a href="https://ko-fi.com/ao3skingen" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            ☕ Support on Ko-fi
+          </a>
+        </div>
+      </footer>
     </main>
   );
 }

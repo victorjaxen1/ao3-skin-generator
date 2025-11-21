@@ -17,6 +17,9 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
     const messages = project.messages.map(m => m.id === id ? { ...m, ...patch } : m);
     update('messages', messages);
   }
+  function deleteMsg(id: string) {
+    update('messages', project.messages.filter(m => m.id !== id));
+  }
   function addMessage() {
     const newMsg: Message = {
       id: crypto.randomUUID(), sender: 'New', content: 'Message', outgoing: false
@@ -41,6 +44,16 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">Editor</h2>
+      <div>
+        <label className="flex flex-col text-sm">
+          <span className="font-medium mb-1">Template Style</span>
+          <select value={project.template} onChange={e=>update('template', e.target.value as any)} className="border px-2 py-1 rounded">
+            <option value="ios">iOS iMessage</option>
+            <option value="android">Android/WhatsApp</option>
+            <option value="note">Note/System Message</option>
+          </select>
+        </label>
+      </div>
       <div className="grid grid-cols-2 gap-4">
         <label className="flex flex-col text-sm">Sender Color
           <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
@@ -65,7 +78,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
         <h3 className="font-medium text-sm mb-2">Messages</h3>
         <div className="space-y-2">
           {project.messages.map(m => (
-            <div key={m.id} className="border p-2 rounded text-sm space-y-1">
+            <div key={m.id} className="border p-2 rounded text-sm space-y-1 bg-gray-50">
               <div className="flex gap-2">
                 <input className="border px-1 flex-1" value={m.sender} onChange={e=>updateMsg(m.id,{sender:e.target.value})} placeholder="Sender name" />
                 <label className="flex items-center gap-1"><input type="checkbox" checked={m.outgoing} onChange={e=>updateMsg(m.id,{outgoing:e.target.checked})} /> Outgoing</label>
@@ -78,6 +91,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                   <input type="file" accept="image/*" onChange={(e) => handleAvatarUpload(m.id, e)} className="hidden" disabled={uploading === m.id} />
                 </label>
                 {m.avatarUrl && <span className="text-xs text-green-600">✓</span>}
+                <button type="button" onClick={() => deleteMsg(m.id)} className="text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 ml-auto" title="Delete message">×</button>
               </div>
             </div>
           ))}
