@@ -363,8 +363,27 @@ function buildDiscordCSS(maxWidth: number, dark: boolean): string {
 
 export function buildCSS(project: SkinProject): string {
   const s = project.settings;
-  const senderBg = hexToRgba(s.senderColor, s.bubbleOpacity);
-  const recvBg = hexToRgba(s.receiverColor, s.bubbleOpacity);
+  
+  // iOS Mode Override
+  let senderColor = s.senderColor;
+  let receiverColor = s.receiverColor;
+  let bubbleOpacity = s.bubbleOpacity;
+  
+  if (project.template === 'ios') {
+    if (s.iosMode === 'sms') {
+      senderColor = '#34C759'; // Green
+      receiverColor = '#E9E9EB';
+      bubbleOpacity = 1.0;
+    } else {
+      // Default to iMessage Blue
+      senderColor = '#007AFF';
+      receiverColor = '#E9E9EB';
+      bubbleOpacity = 1.0;
+    }
+  }
+
+  const senderBg = hexToRgba(senderColor, bubbleOpacity);
+  const recvBg = hexToRgba(receiverColor, bubbleOpacity);
   const neutralBg = s.useDarkNeutral ? 'rgba(255,255,255,0.08)' : 'transparent';
   const maxWidth = s.maxWidthPx;
   

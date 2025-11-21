@@ -67,6 +67,7 @@ export interface SkinSettings {
   discordDarkMode?: boolean;
   discordRolePresets?: Array<{name: string; color: string}>; // new: save common roles
   // iOS/Android chat enhancements
+  iosMode?: 'imessage' | 'sms'; // Toggle between Blue and Green
   chatContactName?: string; // "Conversation with..." header
   chatShowTyping?: boolean; // show typing indicator
   chatTypingName?: string; // who is typing

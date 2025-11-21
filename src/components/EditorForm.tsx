@@ -54,8 +54,10 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           newSettings.instagramTimestamp = '2 hours ago';
         }
       } else if (value === 'ios') {
-        newSettings.senderColor = '#1d9bf0'; // iOS blue
-        newSettings.receiverColor = '#ececec';
+        newSettings.iosMode = 'imessage';
+        newSettings.senderColor = '#007AFF'; // iOS Blue
+        newSettings.receiverColor = '#E9E9EB'; // iOS Gray
+        newSettings.bubbleOpacity = 1.0; // Standard iOS
       }
       else if (value === 'discord') {
         newSettings.discordChannelName = project.settings.discordChannelName || 'general';
@@ -202,8 +204,45 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
           </label>
         </div>
+      ) : project.template === 'ios' ? (
+        <div className="space-y-4">
+          {/* iOS Mode Selection */}
+          <div className="flex gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+             <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="iosMode" 
+                  checked={project.settings.iosMode !== 'sms'} 
+                  onChange={() => {
+                     updateSettings('iosMode', 'imessage');
+                     updateSettings('senderColor', '#007AFF');
+                  }} 
+                />
+                <span className="text-blue-600 font-semibold">iMessage (Blue)</span>
+             </label>
+             <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="iosMode" 
+                  checked={project.settings.iosMode === 'sms'} 
+                  onChange={() => {
+                     updateSettings('iosMode', 'sms');
+                     updateSettings('senderColor', '#34C759');
+                  }} 
+                />
+                <span className="text-green-600 font-semibold">SMS (Green)</span>
+             </label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
+            </label>
+            {/* Advanced toggle could go here later */}
+          </div>
+        </div>
       ) : (
-        /* iOS/Android chat templates - keep all bubble controls */
+        /* Android chat templates - keep all bubble controls */
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col text-sm">Sender Color
             <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
