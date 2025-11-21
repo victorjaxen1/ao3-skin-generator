@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SkinProject, Message } from '../lib/schema';
+import { uploadImage } from '../lib/imgur';
 
 interface Props { project: SkinProject; onChange: (p: SkinProject) => void; }
 
 export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
+  const [uploading, setUploading] = useState<string | null>(null);
+  
   function update<K extends keyof SkinProject>(key: K, value: SkinProject[K]) {
     onChange({ ...project, [key]: value });
   }
@@ -19,6 +22,21 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
       id: crypto.randomUUID(), sender: 'New', content: 'Message', outgoing: false
     };
     update('messages', [...project.messages, newMsg]);
+  }
+  
+  async function handleAvatarUpload(msgId: string, e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(msgId);
+    try {
+      const url = await uploadImage(file);
+      updateMsg(msgId, { avatarUrl: url });
+    } catch (err) {
+      alert('Upload failed: ' + (err as Error).message);
+    } finally {
+      setUploading(null);
+    }
   }
   return (
     <div className="space-y-4">
@@ -49,11 +67,18 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           {project.messages.map(m => (
             <div key={m.id} className="border p-2 rounded text-sm space-y-1">
               <div className="flex gap-2">
-                <input className="border px-1 flex-1" value={m.sender} onChange={e=>updateMsg(m.id,{sender:e.target.value})} />
+                <input className="border px-1 flex-1" value={m.sender} onChange={e=>updateMsg(m.id,{sender:e.target.value})} placeholder="Sender name" />
                 <label className="flex items-center gap-1"><input type="checkbox" checked={m.outgoing} onChange={e=>updateMsg(m.id,{outgoing:e.target.checked})} /> Outgoing</label>
               </div>
-              <textarea className="border w-full px-1" rows={2} value={m.content} onChange={e=>updateMsg(m.id,{content:e.target.value})} />
-              <input className="border px-1 w-24" placeholder="time" value={m.timestamp||''} onChange={e=>updateMsg(m.id,{timestamp:e.target.value})} />
+              <textarea className="border w-full px-1" rows={2} value={m.content} onChange={e=>updateMsg(m.id,{content:e.target.value})} placeholder="Message text" />
+              <div className="flex gap-2 items-center">
+                <input className="border px-1 w-24" placeholder="time" value={m.timestamp||''} onChange={e=>updateMsg(m.id,{timestamp:e.target.value})} />
+                <label className="text-xs cursor-pointer px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                  {uploading === m.id ? 'Uploading...' : 'Avatar'}
+                  <input type="file" accept="image/*" onChange={(e) => handleAvatarUpload(m.id, e)} className="hidden" disabled={uploading === m.id} />
+                </label>
+                {m.avatarUrl && <span className="text-xs text-green-600">✓</span>}
+              </div>
             </div>
           ))}
         </div>
