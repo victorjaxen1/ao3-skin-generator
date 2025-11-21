@@ -19,7 +19,7 @@ export interface SkinSettings {
 }
 export interface SkinProject {
   id: string;
-  template: 'ios' | 'android' | 'note';
+  template: 'ios' | 'android' | 'note' | 'twitter' | 'google';
   settings: SkinSettings;
   messages: Message[];
 }

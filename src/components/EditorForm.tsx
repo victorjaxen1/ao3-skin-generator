@@ -16,6 +16,11 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
         newSettings.receiverColor = '#ffffff';
       } else if (value === 'note') {
         newSettings.senderColor = '#4a5568'; // Gray for system messages
+      } else if (value === 'twitter') {
+        newSettings.senderColor = '#1DA1F2'; // Twitter blue
+        newSettings.receiverColor = '#f5f8fa';
+      } else if (value === 'google') {
+        newSettings.senderColor = '#4285F4'; // Google blue
       } else if (value === 'ios') {
         newSettings.senderColor = '#1d9bf0'; // iOS blue
         newSettings.receiverColor = '#ececec';
@@ -66,6 +71,8 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <option value="ios">iOS iMessage</option>
             <option value="android">Android/WhatsApp</option>
             <option value="note">Note/System Message</option>
+            <option value="twitter">Twitter Post</option>
+            <option value="google">Google Search</option>
           </select>
         </label>
       </div>
