@@ -187,7 +187,15 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col text-sm">
               <span className="font-medium mb-1">Text Color</span>
-              <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} className="h-10 rounded cursor-pointer" />
+              <select value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} className="border px-3 py-2 rounded-lg">
+                <option value="#4a5568">Dark Gray (default)</option>
+                <option value="#dc2626">Red (alerts)</option>
+                <option value="#2563eb">Blue (official)</option>
+                <option value="#16a34a">Green (positive)</option>
+                <option value="#9333ea">Purple (personal)</option>
+                <option value="#000000">Black</option>
+                <option value="#ffffff">White</option>
+              </select>
             </label>
             <label className="flex flex-col text-sm">
               <span className="font-medium mb-1">Alignment</span>
@@ -216,67 +224,48 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           </label>
         </div>
       ) : project.template === 'android' ? (
-        /* Android chat templates - simplified controls */
-        <div className="grid grid-cols-2 gap-4">
-          <label className="flex items-center gap-2 text-sm col-span-2">
-            <input 
-              type="checkbox" 
-              checked={project.settings.androidWhatsAppMode !== false} 
-              onChange={e => {
-                const isWhatsApp = e.target.checked;
-                updateSettings('androidWhatsAppMode', isWhatsApp);
-                if (isWhatsApp) {
-                  // Apply authentic WhatsApp colors
-                  updateSettings('senderColor', '#dcf8c6');
-                  updateSettings('receiverColor', '#ffffff');
-                }
-              }} 
-            />
-            <span className="font-medium">💬 Use WhatsApp Colors (authentic green)</span>
-          </label>
-          {!project.settings.androidWhatsAppMode && (
-            <>
-              <label className="flex flex-col text-sm">
-                <span>Sender Bubble Color</span>
-                <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
-                <span className="text-[10px] text-gray-500 mt-1">Custom color (WhatsApp mode off)</span>
-              </label>
-              <label className="flex flex-col text-sm">
-                <span>Receiver Bubble Color</span>
-                <input type="color" value={project.settings.receiverColor} onChange={e=>updateSettings('receiverColor', e.target.value)} />
-                <span className="text-[10px] text-gray-500 mt-1">Custom color (WhatsApp mode off)</span>
-              </label>
-            </>
-          )}
-          <label className="flex flex-col text-sm">
-            <span>Max Width (px)</span>
-            <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} />
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
-          </label>
+        /* Android template - WhatsApp colors locked */
+        <div className="space-y-3">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+            <p className="text-xs text-green-800">
+              <span className="font-semibold">💬 WhatsApp Style</span><br/>
+              <span className="text-[10px]">Uses authentic WhatsApp colors (green sender bubbles, white receiver bubbles)</span>
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col text-sm">
+              <span className="font-medium mb-1">Max Width (px)</span>
+              <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} className="border px-3 py-2 rounded-lg" />
+            </label>
+            <label className="flex items-center gap-2 text-sm pt-6">
+              <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
+            </label>
+          </div>
         </div>
       ) : (
-        /* iOS template - minimal controls, mode is primary */
-        <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col text-sm col-span-2">
+        /* iOS template - no color customization, authentic iOS colors only */
+        <div className="space-y-3">
+          <label className="flex flex-col text-sm">
             <span className="font-medium mb-1">Message Type</span>
             <select 
               value={project.settings.iosMode||'imessage'} 
               onChange={e=>updateSettings('iosMode', e.target.value as 'imessage'|'sms')} 
               className="border px-3 py-2 rounded-lg text-base"
             >
-              <option value="imessage">💙 iMessage (Blue)</option>
-              <option value="sms">💚 SMS/Text (Green)</option>
+              <option value="imessage">💙 iMessage (Blue bubbles)</option>
+              <option value="sms">💚 SMS/Text (Green bubbles)</option>
             </select>
-            <span className="text-[10px] text-gray-500 mt-1">Automatically sets authentic iOS bubble colors</span>
+            <span className="text-[10px] text-gray-500 mt-1">Uses authentic iOS colors - no customization needed!</span>
           </label>
-          <label className="flex flex-col text-sm">Max Width (px)
-            <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} />
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
-          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col text-sm">
+              <span className="font-medium mb-1">Max Width (px)</span>
+              <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} className="border px-3 py-2 rounded-lg" />
+            </label>
+            <label className="flex items-center gap-2 text-sm pt-6">
+              <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
+            </label>
+          </div>
         </div>
       )}
       {project.template === 'note' && (
