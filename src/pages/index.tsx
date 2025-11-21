@@ -6,11 +6,25 @@ import { PreviewPane } from '../components/PreviewPane';
 import { ExportPanel } from '../components/ExportPanel';
 
 export default function HomePage() {
-  const [project, setProject] = useState<SkinProject>(() => loadStoredProject(defaultProject));
+  // Initialize with defaultProject to ensure server and client match on first render
+  const [project, setProject] = useState<SkinProject>(defaultProject);
   const [mobile, setMobile] = useState(true);
   const [dark, setDark] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => { persistProject(project); }, [project]);
+  // Load from storage only on the client, after mount
+  useEffect(() => {
+    const stored = loadStoredProject(defaultProject);
+    setProject(stored);
+    setIsLoaded(true);
+  }, []);
+
+  // Persist changes, but only after we've loaded the initial state
+  useEffect(() => { 
+    if (isLoaded) {
+      persistProject(project); 
+    }
+  }, [project, isLoaded]);
 
   return (
     <main className="min-h-screen p-4 bg-gray-100">

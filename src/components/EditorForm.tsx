@@ -14,6 +14,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
       if (value === 'android') {
         newSettings.senderColor = '#dcf8c6'; // WhatsApp green
         newSettings.receiverColor = '#ffffff';
+        newSettings.androidWhatsAppMode = true; // Default to WhatsApp mode
       } else if (value === 'note') {
         newSettings.senderColor = '#4a5568'; // Gray for system messages
       } else if (value === 'twitter') {
@@ -54,10 +55,8 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           newSettings.instagramTimestamp = '2 hours ago';
         }
       } else if (value === 'ios') {
-        newSettings.iosMode = 'imessage';
-        newSettings.senderColor = '#007AFF'; // iOS Blue
-        newSettings.receiverColor = '#E9E9EB'; // iOS Gray
-        newSettings.bubbleOpacity = 1.0; // Standard iOS
+        newSettings.senderColor = '#1d9bf0'; // iOS blue
+        newSettings.receiverColor = '#ececec';
       }
       else if (value === 'discord') {
         newSettings.discordChannelName = project.settings.discordChannelName || 'general';
@@ -169,31 +168,43 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           </label>
         </div>
       ) : project.template === 'note' ? (
-        <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col text-sm">Note Color
-            <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
-          </label>
-          <label className="flex flex-col text-sm">Note Style
-            <select value={project.settings.noteStyle||'system'} onChange={e=>updateSettings('noteStyle', e.target.value as any)} className="border px-2 py-1 rounded">
-              <option value="system">System Alert</option>
-              <option value="document">Document/Classified</option>
-              <option value="letter">Letter/Memo</option>
-              <option value="simple">Simple Note</option>
+        <div className="space-y-3">
+          <label className="flex flex-col text-sm">
+            <span className="font-medium mb-1">Note Style</span>
+            <select 
+              value={project.settings.noteStyle||'system'} 
+              onChange={e=>updateSettings('noteStyle', e.target.value as any)} 
+              className="border border-gray-300 px-3 py-2 rounded-lg text-base focus:ring-2 focus:ring-gray-400"
+            >
+              <option value="system">🚨 System Alert (uppercase, bold border)</option>
+              <option value="document">📄 Document/Classified (formal headers)</option>
+              <option value="letter">✉️ Letter/Memo (italic, serif font)</option>
+              <option value="simple">📝 Simple Note (plain text box)</option>
             </select>
+            <span className="text-[10px] text-gray-500 mt-1">Each style has unique formatting for different narrative needs</span>
           </label>
-          <label className="flex flex-col text-sm">Alignment
-            <select value={project.settings.noteAlignment||'center'} onChange={e=>updateSettings('noteAlignment', e.target.value as any)} className="border px-2 py-1 rounded">
-              <option value="center">Center</option>
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-            </select>
-          </label>
-          <label className="flex flex-col text-sm">Max Width (px)
-            <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} />
-          </label>
-          <label className="flex items-center gap-2 text-sm col-span-2">
-            <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
-          </label>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col text-sm">
+              <span className="font-medium mb-1">Text Color</span>
+              <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} className="h-10 rounded cursor-pointer" />
+            </label>
+            <label className="flex flex-col text-sm">
+              <span className="font-medium mb-1">Alignment</span>
+              <select value={project.settings.noteAlignment||'center'} onChange={e=>updateSettings('noteAlignment', e.target.value as any)} className="border px-3 py-2 rounded-lg">
+                <option value="center">Center</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            <label className="flex flex-col text-sm">
+              <span className="font-medium mb-1">Max Width (px)</span>
+              <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} className="border px-3 py-2 rounded-lg" />
+            </label>
+            <label className="flex items-center gap-2 text-sm pt-6">
+              <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
+            </label>
+          </div>
         </div>
       ) : project.template === 'discord' ? (
         <div className="grid grid-cols-2 gap-4">
@@ -204,60 +215,64 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
           </label>
         </div>
-      ) : project.template === 'ios' ? (
-        <div className="space-y-4">
-          {/* iOS Mode Selection */}
-          <div className="flex gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-             <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="iosMode" 
-                  checked={project.settings.iosMode !== 'sms'} 
-                  onChange={() => {
-                     updateSettings('iosMode', 'imessage');
-                     updateSettings('senderColor', '#007AFF');
-                  }} 
-                />
-                <span className="text-blue-600 font-semibold">iMessage (Blue)</span>
-             </label>
-             <label className="flex items-center gap-2 cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="iosMode" 
-                  checked={project.settings.iosMode === 'sms'} 
-                  onChange={() => {
-                     updateSettings('iosMode', 'sms');
-                     updateSettings('senderColor', '#34C759');
-                  }} 
-                />
-                <span className="text-green-600 font-semibold">SMS (Green)</span>
-             </label>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
-            </label>
-            {/* Advanced toggle could go here later */}
-          </div>
-        </div>
-      ) : (
-        /* Android chat templates - keep all bubble controls */
+      ) : project.template === 'android' ? (
+        /* Android chat templates - simplified controls */
         <div className="grid grid-cols-2 gap-4">
-          <label className="flex flex-col text-sm">Sender Color
-            <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
+          <label className="flex items-center gap-2 text-sm col-span-2">
+            <input 
+              type="checkbox" 
+              checked={project.settings.androidWhatsAppMode !== false} 
+              onChange={e => {
+                const isWhatsApp = e.target.checked;
+                updateSettings('androidWhatsAppMode', isWhatsApp);
+                if (isWhatsApp) {
+                  // Apply authentic WhatsApp colors
+                  updateSettings('senderColor', '#dcf8c6');
+                  updateSettings('receiverColor', '#ffffff');
+                }
+              }} 
+            />
+            <span className="font-medium">💬 Use WhatsApp Colors (authentic green)</span>
           </label>
-          <label className="flex flex-col text-sm">Receiver Color
-            <input type="color" value={project.settings.receiverColor} onChange={e=>updateSettings('receiverColor', e.target.value)} />
-          </label>
-          <label className="flex flex-col text-sm">Bubble Opacity
-            <input type="number" min={0} max={1} step={0.05} value={project.settings.bubbleOpacity} onChange={e=>updateSettings('bubbleOpacity', parseFloat(e.target.value))} />
-          </label>
-          <label className="flex flex-col text-sm">Max Width (px)
+          {!project.settings.androidWhatsAppMode && (
+            <>
+              <label className="flex flex-col text-sm">
+                <span>Sender Bubble Color</span>
+                <input type="color" value={project.settings.senderColor} onChange={e=>updateSettings('senderColor', e.target.value)} />
+                <span className="text-[10px] text-gray-500 mt-1">Custom color (WhatsApp mode off)</span>
+              </label>
+              <label className="flex flex-col text-sm">
+                <span>Receiver Bubble Color</span>
+                <input type="color" value={project.settings.receiverColor} onChange={e=>updateSettings('receiverColor', e.target.value)} />
+                <span className="text-[10px] text-gray-500 mt-1">Custom color (WhatsApp mode off)</span>
+              </label>
+            </>
+          )}
+          <label className="flex flex-col text-sm">
+            <span>Max Width (px)</span>
             <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} />
           </label>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={project.settings.useDarkNeutral} onChange={e=>updateSettings('useDarkNeutral', e.target.checked)} /> Dark Neutral Layer
+            <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
+          </label>
+        </div>
+      ) : (
+        /* iOS template - minimal controls, mode is primary */
+        <div className="grid grid-cols-2 gap-4">
+          <label className="flex flex-col text-sm col-span-2">
+            <span className="font-medium mb-1">Message Type</span>
+            <select 
+              value={project.settings.iosMode||'imessage'} 
+              onChange={e=>updateSettings('iosMode', e.target.value as 'imessage'|'sms')} 
+              className="border px-3 py-2 rounded-lg text-base"
+            >
+              <option value="imessage">💙 iMessage (Blue)</option>
+              <option value="sms">💚 SMS/Text (Green)</option>
+            </select>
+            <span className="text-[10px] text-gray-500 mt-1">Automatically sets authentic iOS bubble colors</span>
+          </label>
+          <label className="flex flex-col text-sm">Max Width (px)
+            <input type="number" min={280} max={600} value={project.settings.maxWidthPx} onChange={e=>updateSettings('maxWidthPx', parseInt(e.target.value))} />
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
@@ -265,24 +280,40 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
         </div>
       )}
       {project.template === 'note' && (
-        <div className="border rounded p-3 space-y-2 bg-gradient-to-br from-gray-50 to-slate-100">
-          <h3 className="text-sm font-semibold text-gray-700">📝 Note Tips</h3>
-          <div className="text-xs space-y-2 text-gray-600">
-            <p><b>System Alert:</b> Formal notifications (e.g., "SYSTEM WARNING: Unauthorized access")</p>
-            <p><b>Document:</b> Official docs (e.g., "CLASSIFIED - SHIELD PERSONNEL ONLY")</p>
-            <p><b>Letter:</b> Personal notes or memos (e.g., "To: Staff | From: Director")</p>
-            <p><b>Simple:</b> Plain text notes (e.g., "Meet me at midnight")</p>
-            <p className="text-[10px] italic mt-2 bg-white/50 p-2 rounded">
-              💡 Use the "Label" field below for sender/header (e.g., "SYSTEM", "Admin", "Note"). Leave "Outgoing" unchecked for notes.
-            </p>
+        <div className="border rounded p-4 space-y-3 bg-gradient-to-br from-gray-50 to-slate-100">
+          <h3 className="text-sm font-semibold text-gray-700">📝 Note Style Guide</h3>
+          <div className="text-xs space-y-3 text-gray-700">
+            <div className="bg-white/70 p-2 rounded">
+              <p className="font-semibold text-red-700">🚨 System Alert</p>
+              <p className="text-[10px] mt-1">Best for: Emergency warnings, system notifications, urgent messages</p>
+              <p className="text-[10px] italic text-gray-600">Example: "SECURITY BREACH DETECTED"</p>
+            </div>
+            <div className="bg-white/70 p-2 rounded">
+              <p className="font-semibold text-blue-700">📄 Document/Classified</p>
+              <p className="text-[10px] mt-1">Best for: Official reports, classified files, formal documents</p>
+              <p className="text-[10px] italic text-gray-600">Example: "CLASSIFIED - FOR AUTHORIZED PERSONNEL ONLY"</p>
+            </div>
+            <div className="bg-white/70 p-2 rounded">
+              <p className="font-semibold text-purple-700">✉️ Letter/Memo</p>
+              <p className="text-[10px] mt-1">Best for: Personal letters, handwritten notes, informal memos</p>
+              <p className="text-[10px] italic text-gray-600">Example: "Dear John, Meet me at the dock at midnight..."</p>
+            </div>
+            <div className="bg-white/70 p-2 rounded">
+              <p className="font-semibold text-gray-700">📝 Simple Note</p>
+              <p className="text-[10px] mt-1">Best for: Quick notes, neutral announcements, general text</p>
+              <p className="text-[10px] italic text-gray-600">Example: "The meeting has been postponed."</p>
+            </div>
           </div>
+          <p className="text-[10px] italic mt-3 bg-white/50 p-2 rounded border border-gray-200">
+            💡 <b>Quick tip:</b> Use the "Label" field in messages below for sender/header text (e.g., "SYSTEM", "Director Fury", "Note to self"). Leave "Outgoing" unchecked.
+          </p>
         </div>
       )}
       
       {/* iOS-specific options */}
       {project.template === 'ios' && (
         <div className="border rounded p-4 space-y-3 bg-gradient-to-br from-blue-50 to-gray-100">
-          <h3 className="text-sm font-semibold text-blue-900">💬 iMessage Options</h3>
+          <h3 className="text-sm font-semibold text-blue-900">{project.settings.iosMode === 'sms' ? '💬 SMS Options' : '💬 iMessage Options'}</h3>
           
           <label className="flex flex-col text-xs">
             <span className="font-medium mb-1 text-gray-700">Contact Name</span>
@@ -334,7 +365,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           </div>
 
           <p className="text-[10px] text-gray-600 italic bg-white/50 p-2 rounded mt-3">
-            💡 Tip: Use message reactions (below) to add tapback hearts ❤️, thumbs up 👍, etc.
+            💡 Tip: {project.settings.iosMode === 'sms' ? 'SMS uses green bubbles. Switch to iMessage mode above for blue bubbles.' : 'Add message reactions below for tapback effects (❤️, 👍, etc.)'}
           </p>
         </div>
       )}
@@ -409,96 +440,136 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
       )}
       
       {project.template === 'twitter' && (
-        <div className="border rounded p-3 space-y-3 bg-white/50">
-          <h3 className="text-sm font-medium">Tweet Details</h3>
+        <div className="border rounded p-4 space-y-3 bg-gradient-to-br from-blue-50 to-white">
+          <h3 className="text-sm font-semibold text-blue-900">🐦 Tweet Creator</h3>
           
-          {/* Profile & Verification */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <label className="flex flex-col">Twitter Handle
-              <input className="border px-2 py-1 rounded" value={project.settings.twitterHandle||''} onChange={e=>updateSettings('twitterHandle', e.target.value)} placeholder="@username (auto-generated)" />
+          {/* Essential Fields - Always visible */}
+          <div className="space-y-3">
+            <label className="flex flex-col text-xs">
+              <span className="font-medium mb-1 text-gray-700">Twitter Handle</span>
+              <input 
+                className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400" 
+                value={project.settings.twitterHandle||''} 
+                onChange={e=>updateSettings('twitterHandle', e.target.value)} 
+                placeholder="@username (auto-generated from sender name)" 
+              />
             </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" checked={project.settings.twitterVerified||false} onChange={e=>updateSettings('twitterVerified', e.target.checked)} />
-              <span>Verified Account</span>
-            </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" checked={project.settings.twitterVerified||false} onChange={e=>updateSettings('twitterVerified', e.target.checked)} />
+                <span>✓ Verified Account</span>
+              </label>
+              
+              <label className="flex flex-col text-xs">
+                <span className="text-gray-600">Timestamp</span>
+                <input 
+                  className="border border-gray-300 px-2 py-1 rounded text-xs" 
+                  value={project.settings.twitterTimestamp||''} 
+                  onChange={e=>updateSettings('twitterTimestamp', e.target.value)} 
+                  placeholder="3:09 PM · May 5, 2014" 
+                />
+              </label>
+            </div>
           </div>
 
-          {/* Timestamp */}
-          <label className="flex flex-col text-xs">
-            <span className="font-medium mb-1">Timestamp</span>
-            <input className="border px-2 py-1 rounded" value={project.settings.twitterTimestamp||''} onChange={e=>updateSettings('twitterTimestamp', e.target.value)} placeholder="3:09 PM · May 5, 2014" />
-          </label>
-
-          {/* Engagement Metrics */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs">
-              <input type="checkbox" checked={project.settings.twitterShowMetrics||false} onChange={e=>updateSettings('twitterShowMetrics', e.target.checked)} />
-              <span className="font-medium">Show Engagement Metrics</span>
-            </label>
-            {project.settings.twitterShowMetrics && (
-              <div className="grid grid-cols-3 gap-2 pl-6">
-                <label className="flex flex-col text-xs">
-                  <span>Replies</span>
-                  <input type="number" className="border px-2 py-1 rounded" value={project.settings.twitterReplies||0} onChange={e=>updateSettings('twitterReplies', parseInt(e.target.value)||0)} />
-                </label>
-                <label className="flex flex-col text-xs">
-                  <span>Retweets</span>
-                  <input type="number" className="border px-2 py-1 rounded" value={project.settings.twitterRetweets||0} onChange={e=>updateSettings('twitterRetweets', parseInt(e.target.value)||0)} />
-                </label>
-                <label className="flex flex-col text-xs">
-                  <span>Likes</span>
-                  <input type="number" className="border px-2 py-1 rounded" value={project.settings.twitterLikes||0} onChange={e=>updateSettings('twitterLikes', parseInt(e.target.value)||0)} />
-                </label>
-              </div>
-            )}
-          </div>
-
-          {/* Context Link */}
-          <label className="flex flex-col text-xs">
-            <span className="font-medium mb-1">Context Link Text (optional)</span>
-            <input className="border px-2 py-1 rounded" value={project.settings.twitterContextLinkText||''} onChange={e=>updateSettings('twitterContextLinkText', e.target.value)} placeholder="192 people are talking about this" />
-          </label>
-
-          {/* Quote Tweet Section */}
-          <div className="border-t pt-3 mt-3">
-            <label className="flex items-center gap-2 text-xs mb-3">
-              <input type="checkbox" checked={project.settings.twitterQuoteEnabled||false} onChange={e=>updateSettings('twitterQuoteEnabled', e.target.checked)} />
-              <span className="font-medium">Embed Quote Tweet</span>
+          {/* Quote Tweet - Prominent but collapsible */}
+          <div className="border-t border-gray-200 pt-3">
+            <label className="flex items-center gap-2 text-xs mb-2">
+              <input 
+                type="checkbox" 
+                checked={project.settings.twitterQuoteEnabled||false} 
+                onChange={e=>updateSettings('twitterQuoteEnabled', e.target.checked)} 
+                className="rounded"
+              />
+              <span className="font-medium text-gray-700">💬 Embed Quote Tweet (reply/retweet context)</span>
             </label>
             
             {project.settings.twitterQuoteEnabled && (
-              <div className="space-y-2 pl-6 bg-gray-50 p-3 rounded">
+              <div className="space-y-2 pl-6 bg-gray-50/50 p-3 rounded-lg border border-gray-200">
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <label className="flex flex-col">
-                    <span>Display Name</span>
+                    <span className="text-gray-600 mb-1">Display Name</span>
                     <input className="border px-2 py-1 rounded" value={project.settings.twitterQuoteName||''} onChange={e=>updateSettings('twitterQuoteName', e.target.value)} placeholder="John Doe" />
                   </label>
                   <label className="flex flex-col">
-                    <span>Handle</span>
+                    <span className="text-gray-600 mb-1">Handle</span>
                     <input className="border px-2 py-1 rounded" value={project.settings.twitterQuoteHandle||''} onChange={e=>updateSettings('twitterQuoteHandle', e.target.value)} placeholder="@johndoe" />
-                  </label>
-                  <label className="flex items-center gap-2 col-span-2">
-                    <input type="checkbox" checked={project.settings.twitterQuoteVerified||false} onChange={e=>updateSettings('twitterQuoteVerified', e.target.checked)} />
-                    <span>Verified</span>
                   </label>
                 </div>
                 <label className="flex flex-col text-xs">
-                  <span>Quote Tweet Text</span>
-                  <textarea rows={2} className="border px-2 py-1 rounded" value={project.settings.twitterQuoteText||''} onChange={e=>updateSettings('twitterQuoteText', e.target.value)} placeholder="Original tweet content..." />
+                  <span className="text-gray-600 mb-1">Quote Tweet Text</span>
+                  <textarea rows={2} className="border px-2 py-1 rounded resize-none" value={project.settings.twitterQuoteText||''} onChange={e=>updateSettings('twitterQuoteText', e.target.value)} placeholder="Original tweet content..." />
                 </label>
-                <label className="flex flex-col text-xs">
-                  <span>Avatar URL</span>
-                  <input className="border px-2 py-1 rounded" value={project.settings.twitterQuoteAvatar||''} onChange={e=>updateSettings('twitterQuoteAvatar', e.target.value)} placeholder="https://..." />
-                </label>
-                <label className="flex flex-col text-xs">
-                  <span>Image URL (optional)</span>
-                  <input className="border px-2 py-1 rounded" value={project.settings.twitterQuoteImage||''} onChange={e=>updateSettings('twitterQuoteImage', e.target.value)} placeholder="https://..." />
-                </label>
+                <details className="text-xs">
+                  <summary className="cursor-pointer text-gray-500 hover:text-gray-700">+ More options (avatar, image, verification)</summary>
+                  <div className="mt-2 space-y-2 pl-2">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={project.settings.twitterQuoteVerified||false} onChange={e=>updateSettings('twitterQuoteVerified', e.target.checked)} />
+                      <span>Verified</span>
+                    </label>
+                    <input 
+                      className="border px-2 py-1 rounded w-full text-xs" 
+                      value={project.settings.twitterQuoteAvatar||''} 
+                      onChange={e=>updateSettings('twitterQuoteAvatar', e.target.value)} 
+                      placeholder="Avatar URL" 
+                    />
+                    <input 
+                      className="border px-2 py-1 rounded w-full text-xs" 
+                      value={project.settings.twitterQuoteImage||''} 
+                      onChange={e=>updateSettings('twitterQuoteImage', e.target.value)} 
+                      placeholder="Image URL (optional)" 
+                    />
+                  </div>
+                </details>
               </div>
             )}
           </div>
 
-          <p className="text-[10px] text-gray-600 italic">💡 Tip: Main tweet content comes from the message text below. Each message creates a separate tweet.</p>
+          {/* Advanced Options - Collapsed by default */}
+          <details className="border-t border-gray-200 pt-3">
+            <summary className="cursor-pointer text-xs font-medium text-gray-600 hover:text-gray-800">⚙️ Advanced Options (engagement metrics, context)</summary>
+            <div className="mt-3 space-y-3 pl-3">
+              {/* Engagement Metrics */}
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={project.settings.twitterShowMetrics||false} onChange={e=>updateSettings('twitterShowMetrics', e.target.checked)} />
+                  <span className="font-medium text-gray-700">Show Engagement Stats</span>
+                </label>
+                {project.settings.twitterShowMetrics && (
+                  <div className="grid grid-cols-3 gap-2 pl-6">
+                    <label className="flex flex-col text-xs">
+                      <span className="text-gray-600">Replies</span>
+                      <input type="number" className="border px-2 py-1 rounded text-xs" value={project.settings.twitterReplies||0} onChange={e=>updateSettings('twitterReplies', parseInt(e.target.value)||0)} />
+                    </label>
+                    <label className="flex flex-col text-xs">
+                      <span className="text-gray-600">Retweets</span>
+                      <input type="number" className="border px-2 py-1 rounded text-xs" value={project.settings.twitterRetweets||0} onChange={e=>updateSettings('twitterRetweets', parseInt(e.target.value)||0)} />
+                    </label>
+                    <label className="flex flex-col text-xs">
+                      <span className="text-gray-600">Likes</span>
+                      <input type="number" className="border px-2 py-1 rounded text-xs" value={project.settings.twitterLikes||0} onChange={e=>updateSettings('twitterLikes', parseInt(e.target.value)||0)} />
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Context Link */}
+              <label className="flex flex-col text-xs">
+                <span className="text-gray-600 mb-1">Context Link Text</span>
+                <input 
+                  className="border px-2 py-1 rounded text-xs" 
+                  value={project.settings.twitterContextLinkText||''} 
+                  onChange={e=>updateSettings('twitterContextLinkText', e.target.value)} 
+                  placeholder="192 people are talking about this" 
+                />
+              </label>
+            </div>
+          </details>
+
+          <p className="text-[10px] text-gray-600 italic bg-white/50 p-2 rounded">
+            💡 Tip: Tweet content comes from messages below. Each message = separate tweet.
+          </p>
         </div>
       )}
       {project.template === 'google' && (
@@ -532,9 +603,9 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           </label>
 
           {/* Autocomplete Suggestions */}
-          <div className="space-y-2">
-            <label className="flex flex-col text-xs">
-              <span className="font-medium mb-1 text-gray-700">Autocomplete Suggestions (optional)</span>
+          <details className="space-y-2">
+            <summary className="cursor-pointer text-xs font-medium text-gray-600 hover:text-gray-800 mb-2">✨ Autocomplete Suggestions (optional dropdown)</summary>
+            <label className="flex flex-col text-xs pl-3">
               <textarea 
                 rows={4} 
                 className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none font-mono text-sm" 
@@ -543,25 +614,25 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                 placeholder="who is the current green lantern&#10;who is the current queen of genovia&#10;who is the current doctor who"
               />
               <span className="text-[10px] text-gray-500 mt-1">
-                💡 One per line. Use *asterisks* to <b>bold</b> matching parts: "who is the *current* green lantern"
+                💡 One per line. Use *asterisks* to <b>bold</b> matching: "who is the *current* green lantern"
               </span>
             </label>
             
             {/* Visual preview of suggestions */}
             {project.settings.googleSuggestions && project.settings.googleSuggestions.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-2 text-xs">
-                <div className="text-gray-500 mb-1 font-medium">Preview:</div>
+              <div className="bg-white border border-gray-200 rounded-lg p-2 text-xs pl-3 mt-2">
+                <div className="text-gray-500 mb-1 font-medium text-[10px]">Preview:</div>
                 {project.settings.googleSuggestions.slice(0, 3).map((sug, i) => (
-                  <div key={i} className="py-1 px-2 hover:bg-gray-50 rounded">
+                  <div key={i} className="py-1 px-2 hover:bg-gray-50 rounded text-xs">
                     {sug.replace(/\*/g, '')}
                   </div>
                 ))}
                 {project.settings.googleSuggestions.length > 3 && (
-                  <div className="text-gray-400 text-[10px] mt-1">+ {project.settings.googleSuggestions.length - 3} more</div>
+                  <div className="text-gray-400 text-[10px] mt-1 px-2">+ {project.settings.googleSuggestions.length - 3} more</div>
                 )}
               </div>
             )}
-          </div>
+          </details>
 
           {/* Result Statistics Section */}
           <div className="border-t border-gray-200 pt-3 space-y-3">
@@ -745,10 +816,10 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           </label>
 
           {/* Engagement Section - Collapsible */}
-          <div className="border-t border-gray-200 pt-3 space-y-3">
-            <h4 className="text-xs font-medium text-gray-700">⚡ Engagement (optional)</h4>
+          <details className="border-t border-gray-200 pt-3">
+            <summary className="cursor-pointer text-xs font-medium text-gray-600 hover:text-gray-800 mb-2">⚡ Engagement Options (likes, comments)</summary>
             
-            <div className="space-y-2 pl-3">
+            <div className="space-y-3 pl-3 pt-2">
               <label className="flex items-center gap-2 text-xs">
                 <input 
                   type="checkbox" 
@@ -756,14 +827,15 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                   onChange={e=>updateSettings('instagramShowLikes', e.target.checked)} 
                   className="rounded"
                 />
-                <span>Show likes</span>
+                <span className="text-gray-700">Show likes</span>
                 {project.settings.instagramShowLikes && (
                   <input 
                     type="number" 
-                    className="border border-gray-300 px-2 py-1 rounded w-24 ml-2" 
+                    className="border border-gray-300 px-2 py-1 rounded w-28 ml-auto text-xs" 
                     value={project.settings.instagramLikes||0} 
                     onChange={e=>updateSettings('instagramLikes', parseInt(e.target.value)||0)} 
                     min={0}
+                    placeholder="Count"
                   />
                 )}
               </label>
@@ -775,19 +847,20 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                   onChange={e=>updateSettings('instagramShowComments', e.target.checked)} 
                   className="rounded"
                 />
-                <span>Show "View all X comments"</span>
+                <span className="text-gray-700">Show comment count</span>
                 {project.settings.instagramShowComments && (
                   <input 
                     type="number" 
-                    className="border border-gray-300 px-2 py-1 rounded w-24 ml-2" 
+                    className="border border-gray-300 px-2 py-1 rounded w-28 ml-auto text-xs" 
                     value={project.settings.instagramCommentsCount||0} 
                     onChange={e=>updateSettings('instagramCommentsCount', parseInt(e.target.value)||0)} 
                     min={0}
+                    placeholder="Count"
                   />
                 )}
               </label>
             </div>
-          </div>
+          </details>
 
           {/* Timestamp */}
           <label className="flex flex-col text-xs">
@@ -879,11 +952,11 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             </label>
           </div>
 
-          {/* Role Color Presets */}
-          <div className="border-t border-gray-200 pt-3 space-y-2">
-            <h4 className="text-xs font-medium text-gray-700">🎨 Role Color Presets</h4>
-            <p className="text-[10px] text-gray-600">Quick-assign these colors when adding messages below</p>
-            <div className="space-y-1">
+          {/* Role Color Presets - Collapsible */}
+          <details className="border-t border-gray-200 pt-3">
+            <summary className="cursor-pointer text-xs font-medium text-gray-600 hover:text-gray-800 mb-2">🎨 Role Color Presets (optional)</summary>
+            <p className="text-[10px] text-gray-600 mb-2 pl-3">Quick-assign these colors when adding messages below</p>
+            <div className="space-y-1 pl-3">
               {(project.settings.discordRolePresets || []).map((preset, idx) => (
                 <div key={idx} className="flex items-center gap-2 text-xs">
                   <input 
@@ -897,7 +970,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                     className="w-8 h-8 rounded cursor-pointer"
                   />
                   <input 
-                    className="border border-gray-300 px-2 py-1 rounded flex-1" 
+                    className="border border-gray-300 px-2 py-1 rounded flex-1 text-xs" 
                     value={preset.name} 
                     onChange={e => {
                       const newPresets = [...(project.settings.discordRolePresets || [])];
@@ -912,7 +985,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                       const newPresets = (project.settings.discordRolePresets || []).filter((_, i) => i !== idx);
                       updateSettings('discordRolePresets', newPresets);
                     }}
-                    className="text-red-500 hover:text-red-700 px-2"
+                    className="text-red-500 hover:text-red-700 px-2 text-base"
                     title="Remove preset"
                   >×</button>
                 </div>
@@ -923,10 +996,10 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                   const newPresets = [...(project.settings.discordRolePresets || []), { name: 'New Role', color: '#99AAB5' }];
                   updateSettings('discordRolePresets', newPresets);
                 }}
-                className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
+                className="text-xs px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 mt-2"
               >+ Add Role Preset</button>
             </div>
-          </div>
+          </details>
 
           {/* Settings */}
           <div className="border-t border-gray-200 pt-3 grid grid-cols-2 gap-3">

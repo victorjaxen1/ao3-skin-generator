@@ -67,15 +67,16 @@ export interface SkinSettings {
   discordDarkMode?: boolean;
   discordRolePresets?: Array<{name: string; color: string}>; // new: save common roles
   // iOS/Android chat enhancements
-  iosMode?: 'imessage' | 'sms'; // Toggle between Blue and Green
   chatContactName?: string; // "Conversation with..." header
   chatShowTyping?: boolean; // show typing indicator
   chatTypingName?: string; // who is typing
+  iosMode?: 'imessage' | 'sms'; // iOS message type (blue vs green)
   iosShowDelivered?: boolean; // iOS "Delivered" indicator
   iosShowHeader?: boolean; // "To: Contact" header
   androidShowStatus?: boolean; // "Online" / "Last seen"
   androidStatusText?: string; // custom status text
   androidCheckmarks?: boolean; // show ✓✓ checkmarks
+  androidWhatsAppMode?: boolean; // use authentic WhatsApp colors
 }
 export interface SkinProject {
   id: string;
@@ -142,11 +143,13 @@ export const defaultProject = (): SkinProject => ({
     chatContactName: '',
     chatShowTyping: false,
     chatTypingName: '',
+    iosMode: 'imessage',
     iosShowDelivered: false,
     iosShowHeader: false,
     androidShowStatus: false,
     androidStatusText: 'Online',
     androidCheckmarks: true,
+    androidWhatsAppMode: true,
   },
   messages: [
     {
