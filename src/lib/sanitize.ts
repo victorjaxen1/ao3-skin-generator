@@ -16,7 +16,7 @@ export function sanitizeText(input: string): string {
     return fallbackEscape(withBreaks);
   }
   return DOMPurify.sanitize(withBreaks, {
-    ALLOWED_TAGS: ['br'],
+    ALLOWED_TAGS: ['br','b','strong'],
     ALLOWED_ATTR: [],
     FORBID_TAGS: ['script', 'style', 'iframe', 'canvas'],
   });

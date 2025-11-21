@@ -96,6 +96,51 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           <input type="checkbox" checked={project.settings.watermark} onChange={e=>updateSettings('watermark', e.target.checked)} /> Watermark
         </label>
       </div>
+      {project.template === 'twitter' && (
+        <div className="border rounded p-3 space-y-2 bg-white/50">
+          <h3 className="text-sm font-medium">Twitter Options</h3>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <label className="flex flex-col">Handle Override
+              <input className="border px-1" value={project.settings.twitterHandle||''} onChange={e=>updateSettings('twitterHandle', e.target.value)} placeholder="kayden" />
+            </label>
+            <label className="flex items-center gap-2">Verified
+              <input type="checkbox" checked={project.settings.twitterVerified||false} onChange={e=>updateSettings('twitterVerified', e.target.checked)} />
+            </label>
+            <label className="flex flex-col">Timestamp Line
+              <input className="border px-1" value={project.settings.twitterTimestamp||''} onChange={e=>updateSettings('twitterTimestamp', e.target.value)} placeholder="3:09 PM · 5 May 2014" />
+            </label>
+            <label className="flex items-center gap-2">Show Metrics
+              <input type="checkbox" checked={project.settings.twitterShowMetrics||false} onChange={e=>updateSettings('twitterShowMetrics', e.target.checked)} />
+            </label>
+            <label className="flex flex-col">Replies
+              <input type="number" className="border px-1" value={project.settings.twitterReplies||0} onChange={e=>updateSettings('twitterReplies', parseInt(e.target.value)||0)} />
+            </label>
+            <label className="flex flex-col">Retweets
+              <input type="number" className="border px-1" value={project.settings.twitterRetweets||0} onChange={e=>updateSettings('twitterRetweets', parseInt(e.target.value)||0)} />
+            </label>
+            <label className="flex flex-col">Likes
+              <input type="number" className="border px-1" value={project.settings.twitterLikes||0} onChange={e=>updateSettings('twitterLikes', parseInt(e.target.value)||0)} />
+            </label>
+            <label className="flex flex-col col-span-2">Context Link Text
+              <input className="border px-1" value={project.settings.twitterContextLinkText||''} onChange={e=>updateSettings('twitterContextLinkText', e.target.value)} placeholder="192 people are talking about this" />
+            </label>
+          </div>
+          <p className="text-[10px] text-gray-600">Tweet body comes from each message's content; each message becomes a separate tweet.</p>
+        </div>
+      )}
+      {project.template === 'google' && (
+        <div className="border rounded p-3 space-y-2 bg-white/50">
+          <h3 className="text-sm font-medium">Google Search Options</h3>
+          <label className="flex flex-col text-xs">Query Override
+            <input className="border px-1" value={project.settings.googleQuery||''} onChange={e=>updateSettings('googleQuery', e.target.value)} placeholder="who is the current" />
+          </label>
+          <div className="space-y-1 text-xs">
+            <span className="font-medium">Suggestions (one per line)</span>
+            <textarea rows={4} className="border w-full px-1" value={(project.settings.googleSuggestions||[]).join('\n')} onChange={e=>updateSettings('googleSuggestions', e.target.value.split(/\r?\n/).filter(l=>l.trim().length>0))} placeholder="who is the current green lantern\nwho is the current queen of genovia" />
+            <p className="text-[10px] text-gray-600">Wrap parts to bold in *stars* or use <b>HTML &lt;b&gt; tags</b>. Newline separated.</p>
+          </div>
+        </div>
+      )}
       <div>
         <h3 className="font-medium text-sm mb-2">Messages</h3>
         <div className="space-y-2">

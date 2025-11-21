@@ -10,7 +10,7 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-function msgHTML(msg: Message, template: string): string {
+function msgHTML(msg: Message, template: string, project: SkinProject): string {
   const sanitized = sanitizeText(msg.content);
   const avatar = msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.sender} avatar" class="avatar" />` : '';
   const who = `<dt class="sender">${msg.sender}</dt>`;
@@ -23,9 +23,15 @@ function msgHTML(msg: Message, template: string): string {
   }
   
   if (template === 'twitter') {
-    // Twitter template: avatar, username, handle, content, timestamp
-    const handle = `<span class="handle">@${msg.sender.toLowerCase().replace(/\s+/g, '')}</span>`;
-    return `<div class="row">${avatar}<dl class="msg"><dt class="sender">${msg.sender} ${handle}</dt>${bubble}${atts}</dl></div>`;
+    // Single tweet representation uses first message only; additional messages become separate tweets.
+    const handle = (project.settings.twitterHandle && project.settings.twitterHandle.trim().length>0)
+      ? `@${project.settings.twitterHandle.replace(/^@/, '')}`
+      : `@${msg.sender.toLowerCase().replace(/\s+/g, '')}`;
+    const verified = project.settings.twitterVerified ? `<span class="verified" aria-label="Verified">✔</span>` : '';
+    const timestampLine = project.settings.twitterTimestamp || (msg.timestamp ? msg.timestamp : '');
+    const metrics = project.settings.twitterShowMetrics ? `<div class="metrics">${project.settings.twitterReplies ? `<span class="metric replies" title="Replies">↩ ${project.settings.twitterReplies}</span>`:''}${project.settings.twitterRetweets ? `<span class="metric retweets" title="Retweets">🔁 ${project.settings.twitterRetweets}</span>`:''}${project.settings.twitterLikes ? `<span class="metric likes" title="Likes">❤ ${project.settings.twitterLikes}</span>`:''}</div>` : '';
+    const contextLink = project.settings.twitterContextLinkText ? `<div class="context">${sanitizeText(project.settings.twitterContextLinkText)}</div>` : '';
+    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><span class="bird" aria-hidden="true">🐦</span></div><div class="body">${sanitized}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
   }
   
   if (template === 'google') {
@@ -39,14 +45,25 @@ function msgHTML(msg: Message, template: string): string {
 
 export function buildHTML(project: SkinProject): string {
   if (project.template === 'google') {
-    // Google Search special layout
-    const searchTerm = project.messages[0]?.content || 'search query';
-    const body = `<p class="logo"><span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span></p><p class="search-bar"><span>${searchTerm}</span></p>`;
+    // Google Search special layout with suggestions dropdown
+    const searchTerm = (project.settings.googleQuery && project.settings.googleQuery.trim().length>0)
+      ? sanitizeText(project.settings.googleQuery)
+      : sanitizeText(project.messages[0]?.content || 'search query');
+    const suggestions = (project.settings.googleSuggestions||[]).map(line => `<div class="suggest-item">${sanitizeText(line)}</div>`).join('');
+    const dropdown = suggestions.length ? `<div class="suggest-box">${suggestions}</div>` : '';
+    const body = `<p class="logo"><span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span></p><div class="search-wrap"><p class="search-bar"><span>${searchTerm}</span></p>${dropdown}</div>`;
     const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
     return `<div class="chat">${body}${watermark}</div>`;
   }
   
-  const body = project.messages.map(m => msgHTML(m, project.template)).join('');
+  if (project.template === 'twitter') {
+    // Each message becomes its own tweet for flexibility
+    const tweets = project.messages.map(m => msgHTML(m, 'twitter', project)).join('');
+    const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
+    return `<div class="chat tweets">${tweets}${watermark}</div>`;
+  }
+
+  const body = project.messages.map(m => msgHTML(m, project.template, project)).join('');
   const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
   return `<div class="chat">${body}${watermark}</div>`;
 }
@@ -100,31 +117,37 @@ function buildNoteCSS(s: any, senderBg: string, maxWidth: number): string {
 }
 
 function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
-  return `#workskin .chat{max-width:${maxWidth}px;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;display:table;margin:auto;}
-#workskin .row{overflow:hidden;background:#fff;border:0.05em solid #ddd;border-radius:0.3em;min-width:100%;position:relative;padding:1em;margin:0 0 1em 0;}
-#workskin img.avatar{width:40px;height:auto;float:left;margin:0 0.3em 0.3em 0;border-radius:20px;}
-#workskin dl.msg{margin:0;display:flex;flex-direction:column;}
-#workskin dt.sender{position:relative;top:-0.2em;font-size:18px;font-weight:bold;}
-#workskin dt.sender .handle{position:relative;top:-0.5em;font-size:16px;font-weight:300;color:#697882;}
-#workskin dd{margin:0;}
-#workskin dd.bubble{width:100%;display:inline-block;margin-bottom:0.5em;word-wrap:break-word;}
-#workskin dd.bubble .time{display:inline-block;font-size:14px;width:100%;font-weight:300;color:#697882;padding:0.5em 0 0 0;}
+  return `#workskin .chat{max-width:${maxWidth}px;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;margin:auto;}
+#workskin .tweets .tweet{background:#fff;border:1px solid #ddd;border-radius:4px;padding:12px;margin:0 0 12px 0;position:relative;}
+#workskin .tweet img.avatar{width:48px;height:48px;border-radius:24px;float:left;margin:0 12px 0 0;object-fit:cover;}
+#workskin .tweet .head{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;line-height:1;}
+#workskin .tweet .name{font-weight:700;}
+#workskin .tweet .verified{color:${s.senderColor};font-size:14px;margin-left:2px;}
+#workskin .tweet .handle{color:#697882;font-weight:400;}
+#workskin .tweet .bird{margin-left:auto;color:${s.senderColor};}
+#workskin .tweet .body{clear:both;margin-top:8px;font-size:15px;line-height:1.35;word-wrap:break-word;}
+#workskin .tweet .time-line{margin-top:8px;font-size:13px;color:#697882;border-top:1px solid #eee;padding-top:8px;}
+#workskin .tweet .metrics{display:flex;gap:16px;margin-top:8px;font-size:13px;color:#697882;border-top:1px solid #eee;padding-top:8px;}
+#workskin .tweet .metric{display:inline-flex;align-items:center;gap:4px;}
+#workskin .tweet .metric.likes{color:#cc2431;}
+#workskin .tweet .context{margin-top:8px;font-size:13px;color:${s.senderColor};}
+#workskin .tweets .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .link{text-decoration:none;color:#2C7BB8;}
-#workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}`;
 }
 
 function buildGoogleCSS(maxWidth: number): string {
-  return `#workskin .chat{min-width:200px;max-width:80%;margin:auto;}
-#workskin .logo{text-align:center;margin:0;font-weight:bold;font-size:x-large;font-family:"Lato","Verdana",sans-serif;}
-#workskin .logo .blue{color:#4285F4;}
-#workskin .logo .red{color:#DB4437;}
-#workskin .logo .yellow{color:#F4B400;}
-#workskin .logo .green{color:#0F9D58;}
-#workskin .search-bar{margin-top:5px;margin-bottom:0;}
-#workskin .search-bar span{position:relative;display:block;margin:0;padding:5px;border:1px solid #aaa;}
-#workskin .search-stats{margin:0;color:#999;font-size:smaller;padding-top:5px;}
-#workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}`;
+  return `#workskin .chat{min-width:200px;max-width:${maxWidth}px;margin:auto;font-family:Arial,Helvetica,sans-serif;}
+#workskin .logo{text-align:center;margin:0;font-weight:bold;font-size:32px;font-family:\"Lato\",\"Verdana\",sans-serif;}
+#workskin .logo .blue{color:#4285F4;}#workskin .logo .red{color:#DB4437;}#workskin .logo .yellow{color:#F4B400;}#workskin .logo .green{color:#0F9D58;}
+#workskin .search-wrap{margin-top:12px;}
+#workskin .search-bar{margin:0;}
+#workskin .search-bar span{display:block;padding:10px 14px;border:1px solid #aaa;border-radius:24px;font-size:16px;}
+#workskin .suggest-box{border:1px solid #d4d4d4;border-top:none;border-radius:0 0 24px 24px;overflow:hidden;margin-top:-8px;}
+#workskin .suggest-item{padding:6px 16px;font-size:15px;line-height:1.2;}
+#workskin .suggest-item:nth-child(odd){background:#fafafa;}
+#workskin .suggest-item b,#workskin .suggest-item strong{font-weight:600;}
+#workskin .wm{margin-top:24px;font-size:10px;opacity:0.5;text-align:center;}`;
 }
 
 export function buildCSS(project: SkinProject): string {

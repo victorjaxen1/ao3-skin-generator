@@ -16,6 +16,18 @@ export interface SkinSettings {
   maxWidthPx: number;
   useDarkNeutral: boolean;
   watermark: boolean;
+  // Twitter specific settings
+  twitterHandle?: string;
+  twitterVerified?: boolean;
+  twitterLikes?: number;
+  twitterRetweets?: number;
+  twitterReplies?: number;
+  twitterContextLinkText?: string;
+  twitterShowMetrics?: boolean;
+  twitterTimestamp?: string; // full date/time line (e.g., "3:09 PM · 5 May 2014")
+  // Google specific settings
+  googleQuery?: string;
+  googleSuggestions?: string[]; // list of suggestion lines
 }
 export interface SkinProject {
   id: string;
@@ -35,6 +47,16 @@ export const defaultProject = (): SkinProject => ({
     maxWidthPx: 400,
     useDarkNeutral: true,
     watermark: true,
+    twitterHandle: '',
+    twitterVerified: false,
+    twitterLikes: 0,
+    twitterRetweets: 0,
+    twitterReplies: 0,
+    twitterContextLinkText: 'People are talking about this',
+    twitterShowMetrics: true,
+    twitterTimestamp: '',
+    googleQuery: '',
+    googleSuggestions: [],
   },
   messages: [
     {
