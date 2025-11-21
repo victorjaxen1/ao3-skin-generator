@@ -68,11 +68,11 @@ function buildAndroidCSS(s: any, senderBg: string, recvBg: string, neutralBg: st
 
 function buildNoteCSS(s: any, senderBg: string, maxWidth: number): string {
   return `#workskin .chat{width:80%;max-width:${maxWidth}px;margin:20px auto;display:flex;flex-direction:column;font-family:${s.fontFamily};}
-#workskin .row{display:flex;justify-content:center;margin:12px 0;}
-#workskin dl.msg{margin:0;display:flex;flex-direction:column;align-items:center;}
+#workskin .row{display:flex;justify-content:center;margin:12px 0;width:100%;}
+#workskin dl.msg{margin:0;display:flex;flex-direction:column;align-items:center;max-width:100%;}
 #workskin dt.sender{font-size:11px;color:rgba(255,255,255,0.5);margin:0 0 4px 0;font-weight:600;}
-#workskin dd{margin:0;}
-#workskin dd.bubble{background:${senderBg};color:#fff;padding:10px 16px;border-radius:12px;line-height:1.4;text-align:center;max-width:90%;word-wrap:break-word;border:1px solid rgba(255,255,255,0.1);}
+#workskin dd{margin:0;max-width:100%;}
+#workskin dd.bubble{background:${senderBg};color:#fff;padding:10px 16px;border-radius:12px;line-height:1.4;text-align:center;max-width:100%;word-wrap:break-word;word-break:break-word;border:1px solid rgba(255,255,255,0.1);box-sizing:border-box;}
 #workskin dd.bubble .time{display:block;font-size:9px;opacity:0.6;margin-top:6px;}
 #workskin .wm{margin-top:16px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}`;
