@@ -44,11 +44,23 @@ generator/
 
 ## 5. Domain Model
 `SkinProject` aggregates:
-- `template`: discriminant union (‘ios’ | ‘android’ | ‘note’ | ‘twitter’ | ‘google’ | ‘instagram’ | ‘discord’ ...)
-- `settings`: per-template + shared fields (bubble colors, width, watermark, etc.)
-- `messages`: ordered list of `Message` objects (sender metadata, content, attachments, optional `roleColor` for Discord)
+- `template`: discriminant union ('ios' | 'android' | 'note' | 'twitter' | 'google' | 'instagram' | 'discord')
+- `settings`: per-template + shared fields (bubble colors, width, watermark, platform-specific features)
+- `messages`: ordered list of `Message` objects with:
+  - Core fields: sender, content, timestamp, avatarUrl, attachments, outgoing
+  - Chat-specific: status ('sent' | 'delivered' | 'read'), reaction (emoji string)
+  - Discord-specific: roleColor
 
 Key onboarding tasks: read `schema.ts` to understand new field addition pattern.
+
+### Recent Schema Enhancements (Nov 2025)
+All templates now feature **platform-specific optimizations** for faster workflows:
+- **Chat templates** (iOS/Android): Added contact headers, typing indicators, message reactions, status tracking
+- **Twitter**: Collapsible metrics, auto-handle generation, quote tweet support
+- **Instagram**: Dedicated post creator with username/caption/location fields
+- **Google Search**: Toggle-based stats/corrections, suggestion previews
+- **Note**: 4 style variants (system/document/letter/simple), alignment options
+- **Discord**: Role color presets, server name, quick-assign buttons
 
 ## 6. Generation Flow
 1. User edits project state via `EditorForm`.
@@ -122,8 +134,133 @@ Potential future automated tests: snapshot the exported HTML + CSS for diff regr
 | Raw `<script>` or `<style>` in content | Sanitizer strips; ensure UI prevents copy of such tags |
 | Template switch loses per-message fields | Maintain message shape; only apply auto-color if missing |
 | Bold markup inside suggestions not rendering | Use `*text*` or `<b>text</b>` pattern handled by `applyBoldMarkup` |
+| Template-agnostic UI showing irrelevant controls | Hide unrelated fields; use conditional rendering per template |
+| Missing platform-specific features | Each template should optimize for its unique workflow patterns |
 
-## 16. Future Roadmap (Engineering Angle)
+## 16. Template Optimization Lessons Learned (Nov 2025)
+
+### Key Principle: Platform-Specific Workflows
+Each template should be optimized for **its unique use case** rather than forcing all templates through generic controls. This dramatically improves UX and workflow speed for AO3 writers.
+
+### Template-by-Template Insights
+
+#### Twitter Template
+**Challenge**: Generic sender/receiver colors didn't match Twitter's single-author model.  
+**Solution**: 
+- Repurposed `senderColor` as accent color (verified badge, engagement icons)
+- Made metrics (likes/RTs/replies) collapsible to reduce clutter
+- Auto-generated Twitter handles from sender names
+- Added quote tweet section for nested content
+
+**Lesson**: Single-post templates need different color semantics than chat templates.
+
+#### Instagram Template
+**Challenge**: Using the messages array felt awkward for single-post creation.  
+**Solution**:
+- Created dedicated fields: `instagramUsername`, `instagramCaption`, `instagramLocation`
+- Added separate avatar/image upload controls
+- Made engagement (likes/comments) collapsible with toggle
+- Moved post creation to dedicated section instead of message list
+
+**Lesson**: Social media posts aren't conversations—don't force them into chat-like interfaces.
+
+#### Google Search Template
+**Challenge**: Stats and corrections were always visible, cluttering simple searches.  
+**Solution**:
+- Added toggle switches: `googleShowStats`, `googleShowDidYouMean`
+- Made `googleQuery` the prominent field (not buried in messages)
+- Created visual suggestion preview dropdown
+- Separated search-specific controls from generic chat UI
+
+**Lesson**: Search interfaces need query-first design with optional metadata.
+
+#### Note Template
+**Challenge**: Single style didn't fit varied use cases (system alerts vs formal letters).  
+**Solution**:
+- Created 4 style variants: system, document, letter, simple
+- Added alignment options: left, center, right
+- Simplified message interface (no sender/receiver concepts)
+- Each variant has distinct visual identity
+
+**Lesson**: Document templates benefit from style presets rather than granular color controls.
+
+#### Discord Template
+**Challenge**: Manual role color input was tedious and error-prone.  
+**Solution**:
+- Created role color presets with quick-assign buttons
+- Added server name field for context
+- Implemented dark/light mode variants
+- Pre-populated common role colors (admin/mod/member)
+
+**Lesson**: Community platforms need preset systems that match real-world usage patterns.
+
+#### iOS/Android Chat Templates
+**Challenge**: Basic chat bubbles lacked modern messaging features.  
+**Solution**:
+- Added contact headers (name + status)
+- Implemented typing indicators with animations
+- Added message reactions and status tracking (sent/delivered/read)
+- Platform-specific features:
+  - **iOS**: "To:" label, "Delivered" indicator, blue bubbles
+  - **Android**: Status text, checkmark system (✓/✓✓), Material Design styling
+
+**Lesson**: Chat templates should reflect real platform conventions—iOS and Android users expect different visual languages.
+
+### Cross-Template Patterns
+
+**1. Hide Irrelevant Controls**
+Don't show sender/receiver color pickers for single-author templates (Twitter, Instagram, Note). Reduces cognitive load.
+
+**2. Smart Defaults & Auto-Generation**
+- Twitter: Auto-generate @handles from sender names
+- Instagram: Auto-populate caption field structure
+- Discord: Pre-fill common role colors
+
+**3. Collapsible Sections**
+Optional metadata (metrics, stats, corrections) should be toggleable, not always visible.
+
+**4. Dedicated Panels**
+Each template gets its own option panel in `EditorForm.tsx` with appropriate gradients:
+- Twitter: Purple gradient
+- Instagram: Pink/orange gradient  
+- Google: Blue/red/yellow gradient
+- Discord: Purple/indigo gradient
+- iOS: Blue gradient
+- Android: Green gradient
+
+**5. Progressive Disclosure**
+Show basic controls first, advanced features behind toggles or collapsible sections.
+
+### Architecture Decisions
+
+**Why Not Abstract All Chat Templates?**
+Initial instinct: create shared `ChatTemplate` component. **Decision: Don't.**  
+Reason: iOS, Android, Discord, and Note have fundamentally different conventions. Forcing abstraction creates more conditionals than it saves. Keep each template's CSS/HTML builder separate for clarity.
+
+**Why Dedicated Fields vs Message Array?**
+Instagram and Google proved that non-conversational templates shouldn't abuse the messages array. Create dedicated fields (`instagramCaption`, `googleQuery`) for better semantics.
+
+**Status Indicators: Per-Message vs Global?**
+Added `Message.status` (sent/delivered/read) as per-message field rather than global setting. Allows realistic chat scenarios where some messages are delivered and others aren't.
+
+### Performance Considerations
+- Typing animations use CSS keyframes (no JavaScript)
+- Reactions positioned absolutely to avoid layout shifts
+- Contact headers use minimal DOM structure
+- All platform-specific CSS isolated to template builders
+
+### Future Template Design Guidelines
+
+When adding new templates:
+1. **Audit real platform**: Screenshot actual UI, note unique patterns
+2. **Identify core workflow**: What's the primary task? (Single post? Conversation? Search?)
+3. **Challenge generic fields**: Does "sender/receiver" make sense here?
+4. **Create dedicated controls**: Don't reuse chat UI for non-chat templates
+5. **Add smart defaults**: Pre-populate what can be inferred
+6. **Hide irrelevant**: Conditional rendering is your friend
+7. **Test workflow speed**: Can user complete task in <2 minutes?
+
+## 17. Future Roadmap (Engineering Angle)
 - Template abstraction refactor (reduce duplication across bubble chats)
 - Emoji alias parsing (e.g., `:smile:` → unicode) with safe whitelist
 - Threaded tweet chains (nesting + conversation lines)
@@ -158,6 +295,56 @@ Potential future automated tests: snapshot the exported HTML + CSS for diff regr
 | Editor inputs | `components/EditorForm.tsx` |
 | Sanitization rules | `lib/sanitize.ts` |
 | Local persistence | `lib/storage.ts` |
+
+### Template-Specific Field Reference (Nov 2025)
+
+**Chat Templates (iOS/Android)**
+- `chatContactName`: Contact header name
+- `chatShowTyping`: Enable typing indicator
+- `chatTypingName`: Name shown with typing bubble
+- `iosShowHeader`: iOS "To:" label toggle
+- `iosShowDelivered`: iOS "Delivered" status toggle
+- `androidCheckmarks`: Android checkmark (✓/✓✓) toggle
+- `androidStatusText`: Android status line (e.g., "Online")
+- `androidShowStatus`: Toggle Android status visibility
+- `Message.status`: 'sent' | 'delivered' | 'read'
+- `Message.reaction`: Emoji string per message
+
+**Twitter Template**
+- `twitterShowMetrics`: Toggle likes/RTs/replies visibility
+- `senderColor`: Repurposed as accent color (not bubble color)
+
+**Instagram Template**
+- `instagramUsername`: Post author username
+- `instagramCaption`: Post caption text
+- `instagramLocation`: Location tag
+- `instagramAvatarUrl`: Profile picture URL
+- `instagramImageUrl`: Post image URL
+- `instagramShowLikes`: Toggle likes count
+- `instagramLikesCount`: Number of likes
+- `instagramShowComments`: Toggle comments link
+- `instagramCommentsPreview`: Comments preview text
+
+**Google Search Template**
+- `googleQuery`: Search query text (prominent field)
+- `googleSuggestions`: Array of suggestion strings
+- `googleShowStats`: Toggle results stats
+- `googleStatsText`: Stats line (e.g., "About 1,000 results")
+- `googleShowDidYouMean`: Toggle correction
+- `googleDidYouMean`: Suggested correction text
+- `googleEngineVariant`: 'google' | 'google-old' | 'naver'
+
+**Note Template**
+- `noteStyle`: 'system' | 'document' | 'letter' | 'simple'
+- `noteAlignment`: 'left' | 'center' | 'right'
+
+**Discord Template**
+- `discordRolePresets`: Array of {role, color} objects
+- `discordServerName`: Server name for header
+- `discordChannelName`: Channel name
+- `discordShowHeader`: Toggle header visibility
+- `discordDarkMode`: Dark/light theme toggle
+- `Message.roleColor`: Per-message role color
 
 ## 21. Verification Before Commit
 Run through this mini-checklist:
