@@ -7,6 +7,7 @@ export interface Message {
   timestamp?: string;
   outgoing: boolean; // true = author perspective sender bubble
   attachments?: Attachment[];
+  roleColor?: string; // Discord role/name color
 }
 export interface SkinSettings {
   bubbleOpacity: number; // 0..1
@@ -47,10 +48,14 @@ export interface SkinSettings {
   instagramShowCommentsLink?: boolean;
   instagramTimestamp?: string;
   instagramImageUrl?: string; // override if not using message attachment
+  // Discord specific
+  discordChannelName?: string;
+  discordShowHeader?: boolean;
+  discordDarkMode?: boolean;
 }
 export interface SkinProject {
   id: string;
-  template: 'ios' | 'android' | 'note' | 'twitter' | 'google' | 'instagram';
+  template: 'ios' | 'android' | 'note' | 'twitter' | 'google' | 'instagram' | 'discord';
   settings: SkinSettings;
   messages: Message[];
 }
@@ -93,6 +98,9 @@ export const defaultProject = (): SkinProject => ({
     instagramShowCommentsLink: true,
     instagramTimestamp: '',
     instagramImageUrl: '',
+    discordChannelName: 'general',
+    discordShowHeader: true,
+    discordDarkMode: true,
   },
   messages: [
     {

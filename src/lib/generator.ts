@@ -107,6 +107,20 @@ export function buildHTML(project: SkinProject): string {
     return `<div class="chat">${body}${watermark}</div>`;
   }
 
+  if (project.template === 'discord') {
+    const s = project.settings;
+    const header = s.discordShowHeader ? `<div class="dc-header"><span class="dc-hash">#</span><span class="dc-channel">${sanitizeText(s.discordChannelName||'general')}</span></div>` : '';
+    const lines = project.messages.map(m => {
+      const avatar = m.avatarUrl ? `<img class="dc-avatar" src="${m.avatarUrl}" alt="${sanitizeText(m.sender)} avatar" />` : `<span class="dc-avatar placeholder"></span>`;
+      const nameColor = m.roleColor || '#ffffff';
+      const time = m.timestamp ? `<span class="dc-time">${sanitizeText(m.timestamp)}</span>` : '';
+      const content = sanitizeText(m.content);
+      return `<div class="dc-line">${avatar}<div class="dc-msg"><div class="dc-meta"><span class="dc-name" style="color:${nameColor}">${sanitizeText(m.sender)}</span>${time}</div><div class="dc-text">${content}</div></div></div>`;
+    }).join('');
+    const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
+    return `<div class="chat dc-wrap">${header}${lines}${watermark}</div>`;
+  }
+
   const body = project.messages.map(m => msgHTML(m, project.template, project)).join('');
   const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
   return `<div class="chat">${body}${watermark}</div>`;
@@ -222,6 +236,24 @@ function buildInstagramCSS(maxWidth: number): string {
 #workskin .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}`;
 }
 
+function buildDiscordCSS(maxWidth: number, dark: boolean): string {
+  const bg = dark ? '#2B2D31' : '#FFFFFF';
+  const text = dark ? '#DBDEE1' : '#2E3338';
+  const meta = dark ? '#949BA4' : '#5865F2';
+  return `#workskin .chat.dc-wrap{max-width:${maxWidth}px;margin:auto;font-family:Arial,Helvetica,sans-serif;background:${bg};padding:12px 0;border-radius:6px;}
+#workskin .dc-header{font-size:14px;font-weight:600;padding:0 16px 8px 16px;color:${text};border-bottom:1px solid ${dark?'#1f2124':'#e3e5e8'};margin-bottom:8px;}
+#workskin .dc-header .dc-hash{color:${meta};margin-right:4px;}
+#workskin .dc-line{display:flex;padding:4px 16px 4px 16px;align-items:flex-start;gap:12px;}
+#workskin .dc-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;}
+#workskin .dc-avatar.placeholder{width:40px;height:40px;border-radius:50%;background:#5865F2;display:inline-block;}
+#workskin .dc-msg{flex:1;min-width:0;}
+#workskin .dc-meta{display:flex;align-items:center;gap:8px;line-height:1;}
+#workskin .dc-name{font-weight:600;font-size:14px;}
+#workskin .dc-time{font-size:12px;color:${meta};}
+#workskin .dc-text{font-size:14px;color:${text};line-height:1.25;word-wrap:break-word;white-space:pre-wrap;margin-top:2px;}
+#workskin .wm{margin:8px 16px 0 16px;font-size:10px;opacity:0.5;color:${meta};text-align:right;}`;
+}
+
 export function buildCSS(project: SkinProject): string {
   const s = project.settings;
   const senderBg = hexToRgba(s.senderColor, s.bubbleOpacity);
@@ -240,6 +272,8 @@ export function buildCSS(project: SkinProject): string {
       return buildGoogleCSS(maxWidth);
     case 'instagram':
       return buildInstagramCSS(maxWidth);
+    case 'discord':
+      return buildDiscordCSS(maxWidth, project.settings.discordDarkMode !== false);
     case 'ios':
     default:
       return buildIOSCSS(s, senderBg, recvBg, neutralBg, maxWidth);

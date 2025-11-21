@@ -28,6 +28,11 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
         newSettings.senderColor = '#1d9bf0'; // iOS blue
         newSettings.receiverColor = '#ececec';
       }
+      else if (value === 'discord') {
+        newSettings.discordChannelName = project.settings.discordChannelName || 'general';
+        newSettings.discordShowHeader = project.settings.discordShowHeader !== false;
+        newSettings.discordDarkMode = project.settings.discordDarkMode !== false;
+      }
       onChange({ ...project, [key]: value, settings: newSettings });
       return;
     }
@@ -77,6 +82,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <option value="twitter">Twitter Post</option>
             <option value="google">Google Search</option>
             <option value="instagram">Instagram Post</option>
+            <option value="discord">Discord Chat</option>
           </select>
         </label>
       </div>
@@ -212,6 +218,23 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           <p className="text-[10px] text-gray-600">First message caption text + optional attachment image if no override provided.</p>
         </div>
       )}
+      {project.template === 'discord' && (
+        <div className="border rounded p-3 space-y-2 bg-white/50">
+          <h3 className="text-sm font-medium">Discord Options</h3>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <label className="flex flex-col col-span-1">Channel Name
+              <input className="border px-1" value={project.settings.discordChannelName||''} onChange={e=>updateSettings('discordChannelName', e.target.value)} placeholder="general" />
+            </label>
+            <label className="flex items-center gap-2">Show Header
+              <input type="checkbox" checked={project.settings.discordShowHeader!==false} onChange={e=>updateSettings('discordShowHeader', e.target.checked)} />
+            </label>
+            <label className="flex items-center gap-2">Dark Mode
+              <input type="checkbox" checked={project.settings.discordDarkMode!==false} onChange={e=>updateSettings('discordDarkMode', e.target.checked)} />
+            </label>
+          </div>
+          <p className="text-[10px] text-gray-600">Each message can set a role color (name color). Avatar recommended at 40px square.</p>
+        </div>
+      )}
       <div>
         <h3 className="font-medium text-sm mb-2">Messages</h3>
         <div className="space-y-2">
@@ -221,6 +244,13 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                 <input className="border px-1 flex-1" value={m.sender} onChange={e=>updateMsg(m.id,{sender:e.target.value})} placeholder="Sender name" />
                 <label className="flex items-center gap-1"><input type="checkbox" checked={m.outgoing} onChange={e=>updateMsg(m.id,{outgoing:e.target.checked})} /> Outgoing</label>
               </div>
+              {project.template === 'discord' && (
+                <div className="flex gap-2 items-center">
+                  <label className="flex items-center gap-1 text-xs">Role Color
+                    <input type="color" value={m.roleColor||'#5865F2'} onChange={e=>updateMsg(m.id,{roleColor:e.target.value})} />
+                  </label>
+                </div>
+              )}
               <textarea className="border w-full px-1" rows={2} value={m.content} onChange={e=>updateMsg(m.id,{content:e.target.value})} placeholder="Message text" />
               <div className="flex gap-2 items-center">
                 <input className="border px-1 w-24" placeholder="time" value={m.timestamp||''} onChange={e=>updateMsg(m.id,{timestamp:e.target.value})} />
