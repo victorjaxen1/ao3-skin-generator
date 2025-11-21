@@ -10,6 +10,10 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+function applyBoldMarkup(raw: string): string {
+  return raw.replace(/\*([^*]+)\*/g, '<b>$1</b>');
+}
+
 function msgHTML(msg: Message, template: string, project: SkinProject): string {
   const sanitized = sanitizeText(msg.content);
   const avatar = msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.sender} avatar" class="avatar" />` : '';
@@ -23,7 +27,7 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   }
   
   if (template === 'twitter') {
-    // Single tweet representation uses first message only; additional messages become separate tweets.
+    // Advanced tweet: optional quote tweet embed
     const handle = (project.settings.twitterHandle && project.settings.twitterHandle.trim().length>0)
       ? `@${project.settings.twitterHandle.replace(/^@/, '')}`
       : `@${msg.sender.toLowerCase().replace(/\s+/g, '')}`;
@@ -31,7 +35,16 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
     const timestampLine = project.settings.twitterTimestamp || (msg.timestamp ? msg.timestamp : '');
     const metrics = project.settings.twitterShowMetrics ? `<div class="metrics">${project.settings.twitterReplies ? `<span class="metric replies" title="Replies">↩ ${project.settings.twitterReplies}</span>`:''}${project.settings.twitterRetweets ? `<span class="metric retweets" title="Retweets">🔁 ${project.settings.twitterRetweets}</span>`:''}${project.settings.twitterLikes ? `<span class="metric likes" title="Likes">❤ ${project.settings.twitterLikes}</span>`:''}</div>` : '';
     const contextLink = project.settings.twitterContextLinkText ? `<div class="context">${sanitizeText(project.settings.twitterContextLinkText)}</div>` : '';
-    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><span class="bird" aria-hidden="true">🐦</span></div><div class="body">${sanitized}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
+    let quote = '';
+    if (project.settings.twitterQuoteEnabled) {
+      const qAvatar = project.settings.twitterQuoteAvatar ? `<img src="${project.settings.twitterQuoteAvatar}" alt="Quote avatar" class="quote-avatar" />` : '';
+      const qHandle = project.settings.twitterQuoteHandle ? `@${project.settings.twitterQuoteHandle.replace(/^@/, '')}` : '';
+      const qVerified = project.settings.twitterQuoteVerified ? `<span class="quote-verified" aria-label="Verified">✔</span>` : '';
+      const qText = sanitizeText(project.settings.twitterQuoteText || '');
+      const qImage = project.settings.twitterQuoteImage ? `<img src="${project.settings.twitterQuoteImage}" alt="Quote image" class="quote-image" />` : '';
+      quote = `<div class="quote"><div class="quote-head">${qAvatar}<span class="quote-name">${sanitizeText(project.settings.twitterQuoteName||'')}</span>${qVerified}<span class="quote-handle">${qHandle}</span></div><div class="quote-body">${qText}${qImage}</div></div>`;
+    }
+    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><span class="bird" aria-hidden="true">🐦</span></div><div class="body">${sanitized}${quote}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
   }
   
   if (template === 'google') {
@@ -45,13 +58,25 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
 
 export function buildHTML(project: SkinProject): string {
   if (project.template === 'google') {
-    // Google Search special layout with suggestions dropdown
+    // Google / variant search layout
+    const engine = project.settings.googleEngineVariant || 'google';
+    const logoClass = engine === 'google' ? 'logo sans' : engine === 'google-old' ? 'logo old' : 'logo naver';
     const searchTerm = (project.settings.googleQuery && project.settings.googleQuery.trim().length>0)
       ? sanitizeText(project.settings.googleQuery)
       : sanitizeText(project.messages[0]?.content || 'search query');
-    const suggestions = (project.settings.googleSuggestions||[]).map(line => `<div class="suggest-item">${sanitizeText(line)}</div>`).join('');
+    const suggestions = (project.settings.googleSuggestions||[]).map(line => {
+      const withBold = applyBoldMarkup(line);
+      return `<div class="suggest-item">${sanitizeText(withBold)}</div>`;
+    }).join('');
     const dropdown = suggestions.length ? `<div class="suggest-box">${suggestions}</div>` : '';
-    const body = `<p class="logo"><span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span></p><div class="search-wrap"><p class="search-bar"><span>${searchTerm}</span></p>${dropdown}</div>`;
+    const stats = (project.settings.googleResultsCount || project.settings.googleResultsTime) ? `<p class="search-stats">${sanitizeText(`${project.settings.googleResultsCount||''}${project.settings.googleResultsCount&&project.settings.googleResultsTime? ' ' : ''}${project.settings.googleResultsTime ? '('+project.settings.googleResultsTime+')':''}`)}</p>` : '';
+    const dym = project.settings.googleDidYouMean ? `<p class="search-dym"><span class="search-dym1">Did you mean: </span><span class="search-dym2">${sanitizeText(project.settings.googleDidYouMean)}</span></p>` : '';
+    const body = `<p class="${logoClass}">${engine==='naver'
+      ? `<span class="naver-green">NAVER</span>`
+      : engine==='google-old'
+        ? `<span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>`
+        : `<span class="blue">G</span><span class="red">o</span><span class="yellow">o</span><span class="blue">g</span><span class="green">l</span><span class="red">e</span>`}
+      </p><div class="search-wrap"><p class="search-bar"><span>${searchTerm}</span></p>${dropdown}${stats}${dym}</div>`;
     const watermark = project.settings.watermark ? `<div class="wm">(Created with AO3SkinGen)</div>` : '';
     return `<div class="chat">${body}${watermark}</div>`;
   }
@@ -122,7 +147,7 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 #workskin .tweet img.avatar{width:48px;height:48px;border-radius:24px;float:left;margin:0 12px 0 0;object-fit:cover;}
 #workskin .tweet .head{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;line-height:1;}
 #workskin .tweet .name{font-weight:700;}
-#workskin .tweet .verified{color:${s.senderColor};font-size:14px;margin-left:2px;}
+#workskin .tweet .verified{position:relative;bottom:2px;display:inline-block;font-weight:normal;text-align:center;font-size:10px;width:15px;height:15px;background-color:${s.senderColor};color:#fff;border-radius:50%;}
 #workskin .tweet .handle{color:#697882;font-weight:400;}
 #workskin .tweet .bird{margin-left:auto;color:${s.senderColor};}
 #workskin .tweet .body{clear:both;margin-top:8px;font-size:15px;line-height:1.35;word-wrap:break-word;}
@@ -131,6 +156,13 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 #workskin .tweet .metric{display:inline-flex;align-items:center;gap:4px;}
 #workskin .tweet .metric.likes{color:#cc2431;}
 #workskin .tweet .context{margin-top:8px;font-size:13px;color:${s.senderColor};}
+#workskin .tweet .quote{border:.05em solid #dddddd;border-radius:.3em;padding:8px;margin-top:8px;}
+#workskin .tweet .quote-head{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;}
+#workskin .tweet .quote-avatar{width:24px;height:24px;border-radius:12px;object-fit:cover;}
+#workskin .tweet .quote-verified{position:relative;bottom:2px;display:inline-block;font-weight:normal;text-align:center;font-size:9px;width:12px;height:12px;background-color:${s.senderColor};color:#fff;border-radius:50%;}
+#workskin .tweet .quote-handle{color:#697882;font-weight:400;font-size:12px;}
+#workskin .tweet .quote-body{margin-top:6px;font-size:13px;line-height:1.3;}
+#workskin .tweet .quote-image{width:100%;height:auto;border-radius:.3em;margin-top:6px;}
 #workskin .tweets .wm{margin-top:12px;font-size:10px;opacity:0.5;text-align:center;}
 #workskin .link{text-decoration:none;color:#2C7BB8;}
 #workskin .visually-hidden{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;}`;
@@ -139,14 +171,21 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 function buildGoogleCSS(maxWidth: number): string {
   return `#workskin .chat{min-width:200px;max-width:${maxWidth}px;margin:auto;font-family:Arial,Helvetica,sans-serif;}
 #workskin .logo{text-align:center;margin:0;font-weight:bold;font-size:32px;font-family:\"Lato\",\"Verdana\",sans-serif;}
-#workskin .logo .blue{color:#4285F4;}#workskin .logo .red{color:#DB4437;}#workskin .logo .yellow{color:#F4B400;}#workskin .logo .green{color:#0F9D58;}
+#workskin .logo.old{font-family:\"Cardo\",\"Garamond\",serif;}
+#workskin .logo.naver{font-family:\"Maven Pro\",Verdana,sans-serif;}
+#workskin .naver-green{color:#2DB400;}
+#workskin .blue{color:#4285F4;}#workskin .red{color:#DB4437;}#workskin .yellow{color:#F4B400;}#workskin .green{color:#0F9D58;}
 #workskin .search-wrap{margin-top:12px;}
 #workskin .search-bar{margin:0;}
 #workskin .search-bar span{display:block;padding:10px 14px;border:1px solid #aaa;border-radius:24px;font-size:16px;}
-#workskin .suggest-box{border:1px solid #d4d4d4;border-top:none;border-radius:0 0 24px 24px;overflow:hidden;margin-top:-8px;}
+#workskin .suggest-box{border:1px solid #aaa;border-top:none;border-radius:0 0 24px 24px;overflow:hidden;margin-top:-8px;}
 #workskin .suggest-item{padding:6px 16px;font-size:15px;line-height:1.2;}
 #workskin .suggest-item:nth-child(odd){background:#fafafa;}
 #workskin .suggest-item b,#workskin .suggest-item strong{font-weight:600;}
+#workskin .search-stats{margin:4px 0 0 0;color:#999;font-size:12px;padding-top:5px;}
+#workskin .search-dym{margin:4px 0 0 0;font-size:12px;padding-top:5px;}
+#workskin .search-dym1{color:#de5246;}
+#workskin .search-dym2{color:#0645AD;font-weight:600;font-style:italic;}
 #workskin .wm{margin-top:24px;font-size:10px;opacity:0.5;text-align:center;}`;
 }
 

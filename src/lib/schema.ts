@@ -25,9 +25,21 @@ export interface SkinSettings {
   twitterContextLinkText?: string;
   twitterShowMetrics?: boolean;
   twitterTimestamp?: string; // full date/time line (e.g., "3:09 PM · 5 May 2014")
+  // Quote Tweet (embedded) optional block
+  twitterQuoteEnabled?: boolean;
+  twitterQuoteAvatar?: string;
+  twitterQuoteName?: string;
+  twitterQuoteHandle?: string;
+  twitterQuoteVerified?: boolean;
+  twitterQuoteText?: string;
+  twitterQuoteImage?: string;
   // Google specific settings
   googleQuery?: string;
   googleSuggestions?: string[]; // list of suggestion lines
+  googleResultsCount?: string; // e.g. "About 24,040,000,000 results"
+  googleResultsTime?: string; // e.g. "0.56 seconds"
+  googleDidYouMean?: string; // correction term (Captain Jack Sparrow)
+  googleEngineVariant?: 'google' | 'google-old' | 'naver';
 }
 export interface SkinProject {
   id: string;
@@ -55,8 +67,19 @@ export const defaultProject = (): SkinProject => ({
     twitterContextLinkText: 'People are talking about this',
     twitterShowMetrics: true,
     twitterTimestamp: '',
+    twitterQuoteEnabled: false,
+    twitterQuoteAvatar: '',
+    twitterQuoteName: '',
+    twitterQuoteHandle: '',
+    twitterQuoteVerified: false,
+    twitterQuoteText: '',
+    twitterQuoteImage: '',
     googleQuery: '',
     googleSuggestions: [],
+    googleResultsCount: '',
+    googleResultsTime: '',
+    googleDidYouMean: '',
+    googleEngineVariant: 'google',
   },
   messages: [
     {

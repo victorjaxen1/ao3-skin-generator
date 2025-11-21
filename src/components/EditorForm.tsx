@@ -124,6 +124,29 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
             <label className="flex flex-col col-span-2">Context Link Text
               <input className="border px-1" value={project.settings.twitterContextLinkText||''} onChange={e=>updateSettings('twitterContextLinkText', e.target.value)} placeholder="192 people are talking about this" />
             </label>
+            <label className="flex items-center gap-2 col-span-2">Enable Quote Tweet
+              <input type="checkbox" checked={project.settings.twitterQuoteEnabled||false} onChange={e=>updateSettings('twitterQuoteEnabled', e.target.checked)} />
+            </label>
+            {project.settings.twitterQuoteEnabled && <>
+            <label className="flex flex-col">Quote Name
+              <input className="border px-1" value={project.settings.twitterQuoteName||''} onChange={e=>updateSettings('twitterQuoteName', e.target.value)} placeholder="Kayden Orona" />
+            </label>
+            <label className="flex flex-col">Quote Handle
+              <input className="border px-1" value={project.settings.twitterQuoteHandle||''} onChange={e=>updateSettings('twitterQuoteHandle', e.target.value)} placeholder="kayorona" />
+            </label>
+            <label className="flex items-center gap-2">Quote Verified
+              <input type="checkbox" checked={project.settings.twitterQuoteVerified||false} onChange={e=>updateSettings('twitterQuoteVerified', e.target.checked)} />
+            </label>
+            <label className="flex flex-col col-span-2">Quote Text
+              <textarea rows={2} className="border px-1" value={project.settings.twitterQuoteText||''} onChange={e=>updateSettings('twitterQuoteText', e.target.value)} placeholder="Quote tweet content" />
+            </label>
+            <label className="flex flex-col">Quote Avatar URL
+              <input className="border px-1" value={project.settings.twitterQuoteAvatar||''} onChange={e=>updateSettings('twitterQuoteAvatar', e.target.value)} placeholder="https://..." />
+            </label>
+            <label className="flex flex-col">Quote Image URL
+              <input className="border px-1" value={project.settings.twitterQuoteImage||''} onChange={e=>updateSettings('twitterQuoteImage', e.target.value)} placeholder="https://..." />
+            </label>
+            </>}
           </div>
           <p className="text-[10px] text-gray-600">Tweet body comes from each message's content; each message becomes a separate tweet.</p>
         </div>
@@ -134,6 +157,24 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
           <label className="flex flex-col text-xs">Query Override
             <input className="border px-1" value={project.settings.googleQuery||''} onChange={e=>updateSettings('googleQuery', e.target.value)} placeholder="who is the current" />
           </label>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <label className="flex flex-col">Results Count
+              <input className="border px-1" value={project.settings.googleResultsCount||''} onChange={e=>updateSettings('googleResultsCount', e.target.value)} placeholder="About 24,040,000,000 results" />
+            </label>
+            <label className="flex flex-col">Results Time
+              <input className="border px-1" value={project.settings.googleResultsTime||''} onChange={e=>updateSettings('googleResultsTime', e.target.value)} placeholder="0.56 seconds" />
+            </label>
+            <label className="flex flex-col col-span-2">Did You Mean (correction)
+              <input className="border px-1" value={project.settings.googleDidYouMean||''} onChange={e=>updateSettings('googleDidYouMean', e.target.value)} placeholder="Captain Jack Sparrow" />
+            </label>
+            <label className="flex flex-col col-span-2">Engine Variant
+              <select className="border px-1" value={project.settings.googleEngineVariant||'google'} onChange={e=>updateSettings('googleEngineVariant', e.target.value as any)}>
+                <option value="google">Google (Current)</option>
+                <option value="google-old">Google (Old Serif)</option>
+                <option value="naver">Naver</option>
+              </select>
+            </label>
+          </div>
           <div className="space-y-1 text-xs">
             <span className="font-medium">Suggestions (one per line)</span>
             <textarea rows={4} className="border w-full px-1" value={(project.settings.googleSuggestions||[]).join('\n')} onChange={e=>updateSettings('googleSuggestions', e.target.value.split(/\r?\n/).filter(l=>l.trim().length>0))} placeholder="who is the current green lantern\nwho is the current queen of genovia" />
