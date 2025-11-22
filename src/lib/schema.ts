@@ -86,7 +86,7 @@ export interface SkinProject {
 }
 
 export const defaultProject = (): SkinProject => ({
-  id: crypto.randomUUID(),
+  id: 'default-project',
   template: 'ios',
   settings: {
     bubbleOpacity: 0.9,
@@ -153,14 +153,14 @@ export const defaultProject = (): SkinProject => ({
   },
   messages: [
     {
-      id: crypto.randomUUID(),
+      id: 'default-msg-1',
       sender: 'You',
       content: 'Where are you? i dont know but i know you are an idiot and i will mess you up if you dont keep quite',
       outgoing: true,
       timestamp: '10:15'
     },
     {
-      id: crypto.randomUUID(),
+      id: 'default-msg-2',
       sender: 'Alice',
       content: 'On my way. lets see what you can actually do dickhead!!',
       outgoing: false,
