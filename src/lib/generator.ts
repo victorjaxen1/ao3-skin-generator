@@ -20,9 +20,6 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   const avatar = msg.avatarUrl ? `<img src="${msg.avatarUrl}" alt="${msg.sender} avatar" class="avatar" />` : '';
   const who = `<dt class="sender">${msg.sender}</dt>`;
   
-  // Enhanced bubble with status and reactions for chat templates
-  let bubble = `<dd class="bubble ${msg.outgoing ? 'out' : 'in'}">${sanitized}${msg.timestamp ? `<span class="time">${msg.timestamp}</span>`: ''}`;
-  
   // Build checkmark HTML for WhatsApp (will be added inside bubble)
   let checkmarkHTML = '';
   if (template === 'android' && msg.outgoing && project.settings.androidCheckmarks) {
