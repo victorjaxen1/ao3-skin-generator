@@ -210,9 +210,9 @@ function buildIOSCSS(s: any, senderBg: string, recvBg: string, neutralBg: string
 #workskin dd{margin:0;}
 #workskin dd.bubble{position:relative;max-width:75%;padding:6px 10px;border-radius:16px;line-height:1.3;word-wrap:break-word;background:${neutralBg};color:inherit;}
 #workskin dd.bubble.out{background:${senderBg};color:#fff;border-bottom-right-radius:4px;}
-#workskin dd.bubble.out::after{content:"";position:absolute;right:-5px;bottom:0;width:10px;height:10px;background:${senderBg};border-bottom-left-radius:16px 14px;}
+#workskin dd.bubble.out::after{content:'';position:absolute;right:-5px;bottom:0;width:10px;height:10px;background:${senderBg};border-bottom-left-radius:16px 14px;}
 #workskin dd.bubble.in{background:${recvBg};border-bottom-left-radius:4px;}
-#workskin dd.bubble.in::after{content:"";position:absolute;left:-5px;bottom:0;width:10px;height:10px;background:${recvBg};border-bottom-right-radius:16px 14px;}
+#workskin dd.bubble.in::after{content:'';position:absolute;left:-5px;bottom:0;width:10px;height:10px;background:${recvBg};border-bottom-right-radius:16px 14px;}
 #workskin dd.bubble .time{display:block;font-size:9px;opacity:0.6;margin-top:4px;}
 #workskin dd.bubble .reaction{position:absolute;bottom:-8px;right:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:2px 6px;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
 #workskin dd.status-indicator{font-size:9px;color:rgba(255,255,255,0.5);text-align:right;margin:2px 10px 0 0;}
