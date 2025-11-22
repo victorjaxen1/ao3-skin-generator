@@ -21,7 +21,7 @@ export const PLATFORM_ASSETS = {
   },
   whatsapp: {
     checkmarkSent: 'https://media.publit.io/file/AO3-Skins-App/whatsapp-checkmarkSent.png', // Grey single check
-    checkmarkDelivered: 'https://media.publit.io/file/AO3-Skins-App/whatsappcheckmarkDelivered.png', // Grey double check
+    checkmarkDelivered: 'https://media.publit.io/file/AO3-Skins-App/whatsapp-checkmarkDelivered.png', // Grey double check
     checkmarkRead: 'https://media.publit.io/file/AO3-Skins-App/whatsapp-checkmarkRead.png', // Blue double check
     onlineIcon: 'https://i.ibb.co/whatsapp-online.png', // Green dot (placeholder)
   },

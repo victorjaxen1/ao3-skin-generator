@@ -157,7 +157,8 @@ export const defaultProject = (): SkinProject => ({
       sender: 'You',
       content: 'Where are you? i dont know but i know you are an idiot and i will mess you up if you dont keep quite',
       outgoing: true,
-      timestamp: '10:15'
+      timestamp: '10:15',
+      status: 'read'
     },
     {
       id: 'default-msg-2',
