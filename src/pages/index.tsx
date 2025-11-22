@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { defaultProject, SkinProject } from '../lib/schema';
 import { loadStoredProject, persistProject } from '../lib/storage';
 import { EditorForm } from '../components/EditorForm';
-import { PreviewPane } from '../components/PreviewPane';
 import { ExportPanel } from '../components/ExportPanel';
+
+// Disable SSR for PreviewPane to avoid CSS hydration issues
+const PreviewPane = dynamic(() => import('../components/PreviewPane').then(mod => ({ default: mod.PreviewPane })), {
+  ssr: false,
+  loading: () => <div className="h-full flex items-center justify-center text-gray-500">Loading preview...</div>
+});
 
 export default function HomePage() {
   // Initialize with defaultProject to ensure server and client match on first render
