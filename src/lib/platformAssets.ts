@@ -6,24 +6,24 @@
 
 export const PLATFORM_ASSETS = {
   twitter: {
-    verifiedBadge: 'https://i.ibb.co/twitter-verified.png', // Blue checkmark
-    logo: 'https://i.ibb.co/twitter-logo.png', // X/Twitter bird
-    replyIcon: 'https://i.ibb.co/twitter-reply.png',
-    retweetIcon: 'https://i.ibb.co/twitter-retweet.png',
-    likeIcon: 'https://i.ibb.co/twitter-like.png',
+    verifiedBadge: 'https://media.publit.io/file/AO3-Skins-App/twitter-verifiedBadge.png', // 16x16px blue checkmark
+    logo: 'https://media.publit.io/file/AO3-Skins-App/twitter-logo.png', // 16x16px X/Twitter bird
+    replyIcon: 'https://media.publit.io/file/AO3-Skins-App/twitter-replyIcon.png', // 14x14px reply arrow
+    retweetIcon: 'https://media.publit.io/file/AO3-Skins-App/twitter-retweetIcon.png', // 14x14px retweet icon
+    likeIcon: 'https://media.publit.io/file/AO3-Skins-App/twitter-likeIcon.png', // 14x14px heart
   },
   instagram: {
-    headerGradient: 'https://i.ibb.co/instagram-gradient.png', // Purple-pink gradient
-    likeIcon: 'https://i.ibb.co/instagram-heart.png', // Red heart
-    commentIcon: 'https://i.ibb.co/instagram-comment.png',
-    locationPin: 'https://i.ibb.co/instagram-location.png',
-    verifiedBadge: 'https://i.ibb.co/instagram-verified.png', // Blue checkmark
+    headerGradient: 'https://i.ibb.co/instagram-gradient.png', // Purple-pink gradient (placeholder)
+    likeIcon: 'https://i.ibb.co/instagram-heart.png', // Red heart (placeholder)
+    commentIcon: 'https://i.ibb.co/instagram-comment.png', // Comment icon (placeholder)
+    locationPin: 'https://media.publit.io/file/AO3-Skins-App/instagram-locationPin.png', // 12x12px location pin
+    verifiedBadge: 'https://i.ibb.co/instagram-verified.png', // Blue checkmark (placeholder)
   },
   whatsapp: {
-    checkmarkSent: 'https://i.ibb.co/whatsapp-check-grey.png', // Single grey check
-    checkmarkDelivered: 'https://i.ibb.co/whatsapp-check-grey-double.png', // Double grey check
-    checkmarkRead: 'https://i.ibb.co/whatsapp-check-blue-double.png', // Double blue check
-    onlineIcon: 'https://i.ibb.co/whatsapp-online.png', // Green dot
+    checkmarkSent: 'https://media.publit.io/file/AO3-Skins-App/whatsapp-checkmarkSent.png', // Grey single check
+    checkmarkDelivered: 'https://media.publit.io/file/AO3-Skins-App/whatsappcheckmarkDelivered.png', // Grey double check
+    checkmarkRead: 'https://media.publit.io/file/AO3-Skins-App/whatsapp-checkmarkRead.png', // Blue double check
+    onlineIcon: 'https://i.ibb.co/whatsapp-online.png', // Green dot (placeholder)
   },
   ios: {
     messageIcon: 'https://i.ibb.co/ios-messages-icon.png', // Messages app icon
