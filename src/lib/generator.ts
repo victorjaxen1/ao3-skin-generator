@@ -41,8 +41,7 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
     else if (msg.status === 'sent') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkSent;
     
     if (checkImg) {
-      const fallback = msg.status === 'read' || msg.status === 'delivered' ? FALLBACK_TEXT.whatsapp.checkDelivered : FALLBACK_TEXT.whatsapp.checkSent;
-      statusIndicator = `<dd class="checkmarks"><img src="${checkImg}" alt="${msg.status}" class="check-icon" onerror="this.outerHTML='${fallback}'" /></dd>`;
+      statusIndicator = `<dd class="checkmarks"><img src="${checkImg}" alt="${msg.status}" class="check-icon" /></dd>`;
     }
   }
   
@@ -58,20 +57,20 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
     const handle = (project.settings.twitterHandle && project.settings.twitterHandle.trim().length>0)
       ? `@${project.settings.twitterHandle.replace(/^@/, '')}`
       : `@${msg.sender.toLowerCase().replace(/\s+/g, '')}`;
-    const verified = project.settings.twitterVerified ? `<img src="${PLATFORM_ASSETS.twitter.verifiedBadge}" alt="Verified" class="verified-badge" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span class=\"verified\">${FALLBACK_TEXT.twitter.verified}</span>')" />` : '';
+    const verified = project.settings.twitterVerified ? `<img src="${PLATFORM_ASSETS.twitter.verifiedBadge}" alt="Verified" class="verified-badge" />` : '';
     const timestampLine = project.settings.twitterTimestamp || (msg.timestamp ? msg.timestamp : '');
-    const metrics = project.settings.twitterShowMetrics ? `<div class="metrics">${project.settings.twitterReplies ? `<span class="metric replies" title="Replies"><img src="${PLATFORM_ASSETS.twitter.replyIcon}" alt="Replies" class="metric-icon" onerror="this.outerHTML='${FALLBACK_TEXT.twitter.reply}'" /> ${project.settings.twitterReplies}</span>`:''}${project.settings.twitterRetweets ? `<span class="metric retweets" title="Retweets"><img src="${PLATFORM_ASSETS.twitter.retweetIcon}" alt="Retweets" class="metric-icon" onerror="this.outerHTML='${FALLBACK_TEXT.twitter.retweet}'" /> ${project.settings.twitterRetweets}</span>`:''}${project.settings.twitterLikes ? `<span class="metric likes" title="Likes"><img src="${PLATFORM_ASSETS.twitter.likeIcon}" alt="Likes" class="metric-icon" onerror="this.outerHTML='${FALLBACK_TEXT.twitter.like}'" /> ${project.settings.twitterLikes}</span>`:''}</div>` : '';
+    const metrics = project.settings.twitterShowMetrics ? `<div class="metrics">${project.settings.twitterReplies ? `<span class="metric replies" title="Replies"><img src="${PLATFORM_ASSETS.twitter.replyIcon}" alt="Replies" class="metric-icon" /> ${project.settings.twitterReplies}</span>`:''}${project.settings.twitterRetweets ? `<span class="metric retweets" title="Retweets"><img src="${PLATFORM_ASSETS.twitter.retweetIcon}" alt="Retweets" class="metric-icon" /> ${project.settings.twitterRetweets}</span>`:''}${project.settings.twitterLikes ? `<span class="metric likes" title="Likes"><img src="${PLATFORM_ASSETS.twitter.likeIcon}" alt="Likes" class="metric-icon" /> ${project.settings.twitterLikes}</span>`:''}</div>` : '';
     const contextLink = project.settings.twitterContextLinkText ? `<div class="context">${sanitizeText(project.settings.twitterContextLinkText)}</div>` : '';
     let quote = '';
     if (project.settings.twitterQuoteEnabled) {
       const qAvatar = project.settings.twitterQuoteAvatar ? `<img src="${project.settings.twitterQuoteAvatar}" alt="Quote avatar" class="quote-avatar" />` : '';
       const qHandle = project.settings.twitterQuoteHandle ? `@${project.settings.twitterQuoteHandle.replace(/^@/, '')}` : '';
-      const qVerified = project.settings.twitterQuoteVerified ? `<img src="${PLATFORM_ASSETS.twitter.verifiedBadge}" alt="Verified" class="quote-verified-badge" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<span class=\"quote-verified\">${FALLBACK_TEXT.twitter.verified}</span>')" />` : '';
+      const qVerified = project.settings.twitterQuoteVerified ? `<img src="${PLATFORM_ASSETS.twitter.verifiedBadge}" alt="Verified" class="quote-verified-badge" />` : '';
       const qText = sanitizeText(project.settings.twitterQuoteText || '');
       const qImage = project.settings.twitterQuoteImage ? `<img src="${project.settings.twitterQuoteImage}" alt="Quote image" class="quote-image" />` : '';
       quote = `<div class="quote"><div class="quote-head">${qAvatar}<span class="quote-name">${sanitizeText(project.settings.twitterQuoteName||'')}</span>${qVerified}<span class="quote-handle">${qHandle}</span></div><div class="quote-body">${qText}${qImage}</div></div>`;
     }
-    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><img src="${PLATFORM_ASSETS.twitter.logo}" alt="Twitter" class="twitter-logo" onerror="this.outerHTML='<span class=\"bird\">${FALLBACK_TEXT.twitter.bird}</span>'" /></div><div class="body">${sanitized}${quote}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
+    return `<div class="tweet">${avatar}<div class="head"><span class="name">${msg.sender}</span>${verified}<span class="handle">${handle}</span><img src="${PLATFORM_ASSETS.twitter.logo}" alt="Twitter" class="twitter-logo" /></div><div class="body">${sanitized}${quote}</div>${timestampLine ? `<div class="time-line">${timestampLine}</div>`:''}${metrics}${contextLink}</div>`;
   }
   
   if (template === 'google') {
@@ -156,7 +155,7 @@ export function buildHTML(project: SkinProject): string {
     const caption = sanitizeText(s.instagramCaption || '');
     const imageTag = s.instagramImageUrl ? `<img class="instImage" src="${s.instagramImageUrl}" alt="Post image" />` : '';
     const avatarTag = s.instagramAvatarUrl ? `<img class="instAvatar" src="${s.instagramAvatarUrl}" alt="${username} avatar" />` : '';
-    const location = s.instagramLocation ? `<span class="instLocation"><img src="${PLATFORM_ASSETS.instagram.locationPin}" alt="Location" class="location-icon" onerror="this.outerHTML='${FALLBACK_TEXT.instagram.location}'" /> ${sanitizeText(s.instagramLocation)}</span>` : '';
+    const location = s.instagramLocation ? `<span class="instLocation"><img src="${PLATFORM_ASSETS.instagram.locationPin}" alt="Location" class="location-icon" /> ${sanitizeText(s.instagramLocation)}</span>` : '';
     const likesLine = s.instagramShowLikes && s.instagramLikes ? `<span class="likes"><b>${s.instagramLikes.toLocaleString()}</b> likes</span>` : '';
     const commentsLink = s.instagramShowComments && s.instagramCommentsCount ? `<span class="comments-link">View all ${s.instagramCommentsCount} comments</span>` : '';
     const ts = s.instagramTimestamp ? `<span class="instTimestamp">${sanitizeText(s.instagramTimestamp)}</span>` : '';
