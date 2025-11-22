@@ -260,7 +260,59 @@ When adding new templates:
 6. **Hide irrelevant**: Conditional rendering is your friend
 7. **Test workflow speed**: Can user complete task in <2 minutes?
 
-## 17. Future Roadmap (Engineering Angle)
+## 17. Recent Updates (November 2025)
+
+### Platform Asset System
+Introduced centralized image hosting for authentic platform icons:
+- **Location**: `src/lib/platformAssets.ts`
+- **CDN**: Publit.io (https://media.publit.io/file/AO3-Skins-App/)
+- **Assets**:
+  - Twitter: verified badge, logo, reply/retweet/like icons
+  - Instagram: location pin
+  - WhatsApp: clock icon (sending), single check (sent), double check (delivered/read)
+- **Implementation**: Icons referenced via `PLATFORM_ASSETS` object, rendered as `<img>` tags
+- **Note**: No JavaScript fallbacks (onerror handlers) since AO3 doesn't execute JS
+
+### Content Processing Functions
+Added text enhancement utilities in `generator.ts`:
+- `highlightHashtags(text)`: Wraps hashtags in `<span class="hashtag">` for Twitter blue styling
+- `applyBoldMarkup(raw)`: Converts `*text*` to `<b>text</b>` for Google suggestions
+
+### Preview Panel Improvements
+Fixed responsive centering issues:
+- Added `overflow-auto` to preview container
+- Set `maxWidth: '100%'` on workskin div
+- Added `margin: '0 auto'` for proper centering
+- All templates now stay contained at any zoom level
+
+### Google Search Template Refinement
+Rebuilt as unified component for seamless dropdown:
+- `.search-container`: Wraps search bar + suggestions as single component
+- `.search-bar`: Query text with bottom border when suggestions present
+- `.search-bar-solo`: Standalone rounded bar when no suggestions
+- **Key fix**: Don't try to join separate components; build as one with conditional structure
+
+### CSS Architecture Updates
+**Template-specific enhancements:**
+- **iOS**: San Francisco font, dark blur reactions, proper tail shapes with clip-path
+- **Android/WhatsApp**: Material Design styling, checkmark system with status tracking
+- **Twitter**: Modern X design with rounded cards, hover effects, proper spacing
+- **Google**: Authentic shadow system, proper border connections
+- **All templates**: Responsive width constraints (`width:90%`, `max-width`, `min-width:200px`)
+
+### Hydration & SSR Fixes
+- Replaced `crypto.randomUUID()` with static IDs in `defaultProject()` to prevent SSR mismatches
+- PreviewPane loaded with `dynamic(() => import(), {ssr: false})`
+- All localStorage operations guarded with SSR checks
+
+### CSP Configuration
+Content Security Policy configured in three layers:
+1. **next.config.js** (primary): Controls actual headers sent by Next.js
+2. **netlify.toml**: CDN-level headers for Netlify deployment
+3. **_document.tsx**: Meta tag fallback
+- Added `https://media.publit.io` to `img-src` directive
+
+## 18. Future Roadmap (Engineering Angle)
 - Template abstraction refactor (reduce duplication across bubble chats)
 - Emoji alias parsing (e.g., `:smile:` → unicode) with safe whitelist
 - Threaded tweet chains (nesting + conversation lines)

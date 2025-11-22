@@ -599,7 +599,7 @@ export const EditorForm: React.FC<Props> = ({ project, onChange }) => {
                 rows={4} 
                 className="border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none font-mono text-sm" 
                 value={(project.settings.googleSuggestions||[]).join('\n')} 
-                onChange={e=>updateSettings('googleSuggestions', e.target.value.split(/\r?\n/).filter(l=>l.trim().length>0))} 
+                onChange={e=>updateSettings('googleSuggestions', e.target.value.split('\n'))} 
                 placeholder="who is the current green lantern&#10;who is the current queen of genovia&#10;who is the current doctor who"
               />
               <span className="text-[10px] text-gray-500 mt-1">
