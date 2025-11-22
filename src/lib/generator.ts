@@ -291,12 +291,10 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 #workskin .tweet img.avatar{width:48px;height:48px;border-radius:24px;float:left;margin:0 12px 0 0;object-fit:cover;}
 #workskin .tweet .head{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;line-height:1;}
 #workskin .tweet .name{font-weight:700;}
-#workskin .tweet .verified{position:relative;bottom:2px;display:inline-block;font-weight:normal;text-align:center;font-size:10px;width:15px;height:15px;background-color:${s.senderColor};color:#fff;border-radius:50%;}
 #workskin .tweet .verified-badge{width:16px;height:16px;display:inline-block;vertical-align:middle;}
 #workskin .tweet .twitter-logo{width:16px;height:16px;margin-left:auto;}
 #workskin .tweet .metric-icon{width:14px;height:14px;vertical-align:middle;}
 #workskin .tweet .handle{color:#697882;font-weight:400;}
-#workskin .tweet .bird{margin-left:auto;color:${s.senderColor};}
 #workskin .tweet .body{clear:both;margin-top:8px;font-size:15px;line-height:1.35;word-wrap:break-word;}
 #workskin .tweet .time-line{margin-top:8px;font-size:13px;color:#697882;border-top:1px solid #eee;padding-top:8px;}
 #workskin .tweet .metrics{display:flex;gap:16px;margin-top:8px;font-size:13px;color:#697882;border-top:1px solid #eee;padding-top:8px;}
@@ -306,7 +304,6 @@ function buildTwitterCSS(s: any, senderBg: string, maxWidth: number): string {
 #workskin .tweet .quote{border:.05em solid #dddddd;border-radius:.3em;padding:8px;margin-top:8px;}
 #workskin .tweet .quote-head{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;}
 #workskin .tweet .quote-avatar{width:24px;height:24px;border-radius:12px;object-fit:cover;}
-#workskin .tweet .quote-verified{position:relative;bottom:2px;display:inline-block;font-weight:normal;text-align:center;font-size:9px;width:12px;height:12px;background-color:${s.senderColor};color:#fff;border-radius:50%;}
 #workskin .tweet .quote-verified-badge{width:12px;height:12px;display:inline-block;vertical-align:middle;}
 #workskin .tweet .quote-handle{color:#697882;font-weight:400;font-size:12px;}
 #workskin .tweet .quote-body{margin-top:6px;font-size:13px;line-height:1.3;}
