@@ -23,6 +23,25 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   // Enhanced bubble with status and reactions for chat templates
   let bubble = `<dd class="bubble ${msg.outgoing ? 'out' : 'in'}">${sanitized}${msg.timestamp ? `<span class="time">${msg.timestamp}</span>`: ''}`;
   
+  // Build checkmark HTML for WhatsApp (will be added inside bubble)
+  let checkmarkHTML = '';
+  if (template === 'android' && msg.outgoing && project.settings.androidCheckmarks) {
+    let checkImg = '';
+    if (msg.status === 'read') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkRead;
+    else if (msg.status === 'delivered') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkDelivered;
+    else if (msg.status === 'sent') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkSent;
+    
+    if (checkImg) {
+      checkmarkHTML = `<img src="${checkImg}" alt="${msg.status}" class="check-icon" />`;
+    }
+  }
+
+  // Build the message bubble
+  let bubble = `<dd class="bubble ${msg.outgoing?'out':'in'}">${sanitized}`;
+  if ((template === 'ios' || template === 'android') && (msg.timestamp || checkmarkHTML)) {
+    bubble += `<span class="time">${msg.timestamp||''}${checkmarkHTML}</span>`;
+  }
+  
   // Add reaction if present (iOS/Android)
   if ((template === 'ios' || template === 'android') && msg.reaction) {
     bubble += `<span class="reaction">${msg.reaction}</span>`;
@@ -34,15 +53,6 @@ function msgHTML(msg: Message, template: string, project: SkinProject): string {
   let statusIndicator = '';
   if (template === 'ios' && msg.outgoing && project.settings.iosShowDelivered && msg.status === 'delivered') {
     statusIndicator = `<dd class="status-indicator">Delivered</dd>`;
-  } else if (template === 'android' && msg.outgoing && project.settings.androidCheckmarks) {
-    let checkImg = '';
-    if (msg.status === 'read') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkRead;
-    else if (msg.status === 'delivered') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkDelivered;
-    else if (msg.status === 'sent') checkImg = PLATFORM_ASSETS.whatsapp.checkmarkSent;
-    
-    if (checkImg) {
-      statusIndicator = `<dd class="checkmarks"><img src="${checkImg}" alt="${msg.status}" class="check-icon" /></dd>`;
-    }
   }
   
   const atts = (msg.attachments||[]).map(a => `<dd class="attach"><span class="visually-hidden">Image:</span><img src="${a.url}" alt="${a.alt||''}" class="attach-img"/></dd>`).join('');
@@ -242,9 +252,8 @@ function buildAndroidCSS(s: any, senderBg: string, recvBg: string, neutralBg: st
 #workskin dd.bubble.out{background:${senderBg};color:#000;border-radius:8px 8px 2px 8px;margin-left:auto;}
 #workskin dd.bubble.in{background:${recvBg};border-radius:8px 8px 8px 2px;}
 #workskin dd.bubble .time{display:inline;font-size:10px;opacity:0.5;margin-left:8px;float:right;}
+#workskin dd.bubble .time .check-icon{width:16px;height:10px;vertical-align:middle;margin-left:4px;}
 #workskin dd.bubble .reaction{position:absolute;bottom:-8px;right:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:2px 6px;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
-#workskin dd.checkmarks{font-size:10px;color:#4CAF50;text-align:right;margin:2px 10px 0 0;}
-#workskin dd.checkmarks .check-icon{width:16px;height:10px;vertical-align:middle;}
 #workskin dd.attach{margin-top:4px;}
 #workskin img.attach-img{max-width:200px;border-radius:8px;display:block;}
 #workskin .row.typing{align-items:center;gap:6px;}
